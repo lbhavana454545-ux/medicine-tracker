@@ -49,10 +49,10 @@
   .reset-btn {
     display: block;
     width: 100%;
-    padding: 12px;
-    margin-bottom: 10px;
+    padding: 14px;
+    margin-top: 25px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #e74c3c;
     color: white;
     font-size: 16px;
@@ -63,11 +63,6 @@
 <body>
 
 <h1>Dad's Medicines</h1>
-
-<button class="reset-btn" onclick="resetAll()">
-  Reset All (Testing)
-</button>
-
 <div class="info" id="statusText"></div>
 
 <!-- MORNING -->
@@ -114,6 +109,11 @@
   <button class="btn" id="n7">Tresiba Insulin</button>
 </div>
 
+<!-- RESET BUTTON AT BOTTOM -->
+<button class="reset-btn" onclick="confirmReset()">
+  Reset All
+</button>
+
 <script>
 const meds = [
 "m1","m2","m3","m4","m5","m6",
@@ -132,9 +132,12 @@ function getTodayKey() {
   return adjusted.toDateString();
 }
 
-function resetAll() {
-  localStorage.clear();
-  location.reload();
+function confirmReset() {
+  const confirmAction = confirm("Are you sure you want to reset all medicines?");
+  if (confirmAction) {
+    localStorage.clear();
+    location.reload();
+  }
 }
 
 function resetIfNeeded() {
