@@ -115,6 +115,11 @@ function getTodayKey() {
 
   return adjusted.toDateString();
 }
+  
+function resetAll() {
+  localStorage.clear();
+  location.reload();
+} 
 
 function resetIfNeeded() {
   const today = getTodayKey();
