@@ -3,9 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dad's Medicines</title>
-<button onclick="resetAll()" style="margin:10px;padding:10px;">
-  Reset All (Testing)
-</button>
+
 <style>
   body {
     font-family: Arial;
@@ -21,7 +19,7 @@
   h2 {
     margin-top: 20px;
   }
- 
+
   .section {
     margin-bottom: 15px;
   }
@@ -45,6 +43,19 @@
     text-align: center;
     font-size: 14px;
     color: #555;
+    margin-bottom: 10px;
+  }
+
+  .reset-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #e74c3c;
+    color: white;
+    font-size: 16px;
   }
 </style>
 </head>
@@ -52,6 +63,11 @@
 <body>
 
 <h1>Dad's Medicines</h1>
+
+<button class="reset-btn" onclick="resetAll()">
+  Reset All (Testing)
+</button>
+
 <div class="info" id="statusText"></div>
 
 <!-- MORNING -->
@@ -115,11 +131,11 @@ function getTodayKey() {
 
   return adjusted.toDateString();
 }
-  
+
 function resetAll() {
   localStorage.clear();
   location.reload();
-} 
+}
 
 function resetIfNeeded() {
   const today = getTodayKey();
@@ -131,7 +147,7 @@ function resetIfNeeded() {
   }
 
   document.getElementById("statusText").innerText =
-    "Tracking for: " + today;
+    "Tracking for: " + today + " (resets after 3 AM)";
 }
 
 function loadState() {
@@ -143,8 +159,13 @@ function loadState() {
     }
 
     btn.onclick = () => {
-      localStorage.setItem(id, "taken");
-      btn.classList.add("taken");
+      if (localStorage.getItem(id) === "taken") {
+        localStorage.removeItem(id);
+        btn.classList.remove("taken");
+      } else {
+        localStorage.setItem(id, "taken");
+        btn.classList.add("taken");
+      }
     };
   });
 }
