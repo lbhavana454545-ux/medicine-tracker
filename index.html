@@ -91,9 +91,8 @@ const db = firebase.database();
 
 <body>
 
-<h1>Medicines Tracker</h1>
+<h1 id="title">Dad's Medicines</h1>
 
-<!-- ✅ MOVED HERE -->
 <div class="toggle">
   <button onclick="switchUser('dad')" id="dadBtn">Dad</button>
   <button onclick="switchUser('mom')" id="momBtn">Mom</button>
@@ -106,14 +105,14 @@ const db = firebase.database();
   <h2>Morning</h2>
 
   <b>Before Food</b>
-  <button class="btn" id="m1">Pan D</button>
-  <button class="btn" id="m2">Zavetox</button>
-  <button class="btn" id="m3">Fiasp Insulin</button>
+  <button class="btn" id="m1"></button>
+  <button class="btn" id="m2"></button>
+  <button class="btn" id="m3"></button>
 
   <b>After Food</b>
-  <button class="btn" id="m4">Cilacar 10mg</button>
-  <button class="btn" id="m5">Omnacortil 5mg</button>
-  <button class="btn" id="m6">Nodosis 1g</button>
+  <button class="btn" id="m4"></button>
+  <button class="btn" id="m5"></button>
+  <button class="btn" id="m6"></button>
 </div>
 
 <!-- AFTERNOON -->
@@ -121,12 +120,12 @@ const db = firebase.database();
   <h2>Afternoon</h2>
 
   <b>Before Food</b>
-  <button class="btn" id="a1">Fiasp Insulin</button>
+  <button class="btn" id="a1"></button>
 
   <b>After Food</b>
-  <button class="btn" id="a2">Calci-CZ</button>
-  <button class="btn" id="a3">Silodal D8</button>
-  <button class="btn" id="a4">Moxovas</button>
+  <button class="btn" id="a2"></button>
+  <button class="btn" id="a3"></button>
+  <button class="btn" id="a4"></button>
 </div>
 
 <!-- NIGHT -->
@@ -134,20 +133,21 @@ const db = firebase.database();
   <h2>Night</h2>
 
   <b>Before Food</b>
-  <button class="btn" id="n1">Fiasp Insulin</button>
-  <button class="btn" id="n2">Zavetox</button>
+  <button class="btn" id="n1"></button>
+  <button class="btn" id="n2"></button>
 
   <b>After Food</b>
-  <button class="btn" id="n3">Azoran 100mg</button>
-  <button class="btn" id="n4">Cilacar 20mg</button>
-  <button class="btn" id="n5">Ecosprin AV</button>
-  <button class="btn" id="n6">Nodosis</button>
-  <button class="btn" id="n7">Tresiba Insulin</button>
+  <button class="btn" id="n3"></button>
+  <button class="btn" id="n4"></button>
+  <button class="btn" id="n5"></button>
+  <button class="btn" id="n6"></button>
+  <button class="btn" id="n7"></button>
 </div>
 
 <button class="reset-btn" onclick="confirmReset()">Reset All</button>
 
 <script>
+
 let currentUser = "dad";
 
 const meds = [
@@ -156,11 +156,71 @@ const meds = [
 "n1","n2","n3","n4","n5","n6","n7"
 ];
 
-function resetIfNeeded() {
-  const today = new Date().toDateString();
-  document.getElementById("statusText").innerText =
-    "Tracking for: " + today;
+
+//  DAD MEDICINES
+const dadMeds = {
+  m1: "Pan D",
+  m2: "Zavetox",
+  m3: "Fiasp Insulin",
+  m4: "Cilacar 10mg",
+  m5: "Omnacortil 5mg",
+  m6: "Nodosis 1g",
+
+  a1: "Fiasp Insulin",
+  a2: "Calci-CZ",
+  a3: "Silodal D8",
+  a4: "Moxovas",
+
+  n1: "Fiasp Insulin",
+  n2: "Zavetox",
+  n3: "Azoran 100mg",
+  n4: "Cilacar 20mg",
+  n5: "Ecosprin AV",
+  n6: "Nodosis",
+  n7: "Tresiba Insulin"
+};
+
+
+//  MOM MEDICINES
+const momMeds = {
+  m1: "Thyronarm 75mg",
+  m2: "Pantocid",
+  m3: "",
+
+  m4: "Omnacortil 2.5mg",
+  m5: "",
+  m6: "",
+
+  a1: "",
+  a2: "Maltida Forte",
+  a3: "Adgain Plus",
+  a4: "",
+
+  n1: "",
+  n2: "",
+  n3: "HCQS 200mg",
+  n4: "",
+  n5: "",
+  n6: "",
+  n7: ""
+};
+
+
+function updateMedicineLabels() {
+  const medsList = currentUser === "dad" ? dadMeds : momMeds;
+
+  meds.forEach(id => {
+    const btn = document.getElementById(id);
+
+    if (medsList[id]) {
+      btn.style.display = "block";
+      btn.innerText = medsList[id];
+    } else {
+      btn.style.display = "none";
+    }
+  });
 }
+
 
 function confirmReset() {
   if (confirm("Reset all medicines?")) {
@@ -170,12 +230,13 @@ function confirmReset() {
   }
 }
 
+
 function loadState() {
   meds.forEach(id => {
     const btn = document.getElementById(id);
     const ref = db.ref(currentUser + "/" + id);
 
-    ref.off(); // ✅ prevent duplicate listeners
+    ref.off();
 
     ref.on("value", snapshot => {
       if (snapshot.val() === true) {
@@ -193,6 +254,7 @@ function loadState() {
   });
 }
 
+
 function switchUser(user) {
   currentUser = user;
 
@@ -201,10 +263,17 @@ function switchUser(user) {
 
   document.getElementById(user + "Btn").classList.add("active");
 
+  document.getElementById("title").innerText =
+    user === "dad" ? "Dad's Medicines" : "Mom's Medicines";
+
+  updateMedicineLabels();
   loadState();
 }
 
-resetIfNeeded();
+
+document.getElementById("statusText").innerText =
+  "Tracks daily medicines (real-time sync)";
+
 switchUser("dad");
 
 </script>
