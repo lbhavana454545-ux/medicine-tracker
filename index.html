@@ -7,7 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dad's Medicines</title>
+<title>Medicines Tracker</title>
 
 <style>
   body {
@@ -18,6 +18,26 @@
   }
 
   h1 { text-align: center; }
+
+  .toggle {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .toggle button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 8px;
+    background: #ccc;
+    font-size: 16px;
+  }
+
+  .active {
+    background: #2ecc71 !important;
+    color: white;
+  }
+
   h2 { margin-top: 20px; }
 
   .section { margin-bottom: 15px; }
@@ -54,7 +74,7 @@
   }
 </style>
 
-<!--Firebase CONFIG -->
+<!-- Firebase config -->
 <script>
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
@@ -71,7 +91,14 @@ const db = firebase.database();
 
 <body>
 
-<h1>Dad's Medicines</h1>
+<h1>Medicines Tracker</h1>
+
+<!-- ✅ MOVED HERE -->
+<div class="toggle">
+  <button onclick="switchUser('dad')" id="dadBtn">Dad</button>
+  <button onclick="switchUser('mom')" id="momBtn">Mom</button>
+</div>
+
 <div class="info" id="statusText"></div>
 
 <!-- MORNING -->
@@ -121,6 +148,7 @@ const db = firebase.database();
 <button class="reset-btn" onclick="confirmReset()">Reset All</button>
 
 <script>
+let currentUser = "dad";
 
 const meds = [
 "m1","m2","m3","m4","m5","m6",
@@ -128,35 +156,26 @@ const meds = [
 "n1","n2","n3","n4","n5","n6","n7"
 ];
 
-function getTodayKey() {
-  const now = new Date();
-  let adjusted = new Date();
-
-  if (now.getHours() < 3) {
-    adjusted.setDate(adjusted.getDate() - 1);
-  }
-
-  return adjusted.toDateString();
+function resetIfNeeded() {
+  const today = new Date().toDateString();
+  document.getElementById("statusText").innerText =
+    "Tracking for: " + today;
 }
 
 function confirmReset() {
-  if (confirm("Are you sure you want to reset all medicines?")) {
+  if (confirm("Reset all medicines?")) {
     meds.forEach(id => {
-      db.ref("dad/" + id).set(false);
+      db.ref(currentUser + "/" + id).set(false);
     });
   }
-}
-
-function resetIfNeeded() {
-  const today = getTodayKey();
-  document.getElementById("statusText").innerText =
-    "Tracking for: " + today + " (resets after 3 AM)";
 }
 
 function loadState() {
   meds.forEach(id => {
     const btn = document.getElementById(id);
-    const ref = db.ref("dad/" + id);
+    const ref = db.ref(currentUser + "/" + id);
+
+    ref.off(); // ✅ prevent duplicate listeners
 
     ref.on("value", snapshot => {
       if (snapshot.val() === true) {
@@ -167,15 +186,26 @@ function loadState() {
     });
 
     btn.onclick = () => {
-      ref.once("value").then(snapshot => {
-        ref.set(!snapshot.val());
+      ref.once("value").then(s => {
+        ref.set(!s.val());
       });
     };
   });
 }
 
+function switchUser(user) {
+  currentUser = user;
+
+  document.getElementById("dadBtn").classList.remove("active");
+  document.getElementById("momBtn").classList.remove("active");
+
+  document.getElementById(user + "Btn").classList.add("active");
+
+  loadState();
+}
+
 resetIfNeeded();
-loadState();
+switchUser("dad");
 
 </script>
 
