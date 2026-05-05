@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+<!-- Firebase v8 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dad's Medicines</title>
 
@@ -12,17 +17,10 @@
     padding: 10px;
   }
 
-  h1 {
-    text-align: center;
-  }
+  h1 { text-align: center; }
+  h2 { margin-top: 20px; }
 
-  h2 {
-    margin-top: 20px;
-  }
-
-  .section {
-    margin-bottom: 15px;
-  }
+  .section { margin-bottom: 15px; }
 
   .btn {
     width: 100%;
@@ -35,9 +33,7 @@
     color: white;
   }
 
-  .taken {
-    background: #2ecc71;
-  }
+  .taken { background: #2ecc71; }
 
   .info {
     text-align: center;
@@ -47,7 +43,6 @@
   }
 
   .reset-btn {
-    display: block;
     width: 100%;
     padding: 14px;
     margin-top: 25px;
@@ -58,6 +53,20 @@
     font-size: 16px;
   }
 </style>
+
+<!--Firebase CONFIG -->
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "medicine-tracker-9acc2.firebaseapp.com",
+  databaseURL: "https://medicine-tracker-9acc2-default-rtdb.firebaseio.com",
+  projectId: "medicine-tracker-9acc2"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+
 </head>
 
 <body>
@@ -109,12 +118,10 @@
   <button class="btn" id="n7">Tresiba Insulin</button>
 </div>
 
-<!-- RESET BUTTON AT BOTTOM -->
-<button class="reset-btn" onclick="confirmReset()">
-  Reset All
-</button>
+<button class="reset-btn" onclick="confirmReset()">Reset All</button>
 
 <script>
+
 const meds = [
 "m1","m2","m3","m4","m5","m6",
 "a1","a2","a3","a4",
@@ -133,22 +140,15 @@ function getTodayKey() {
 }
 
 function confirmReset() {
-  const confirmAction = confirm("Are you sure you want to reset all medicines?");
-  if (confirmAction) {
-    localStorage.clear();
-    location.reload();
+  if (confirm("Are you sure you want to reset all medicines?")) {
+    meds.forEach(id => {
+      db.ref("dad/" + id).set(false);
+    });
   }
 }
 
 function resetIfNeeded() {
   const today = getTodayKey();
-  const lastReset = localStorage.getItem("lastReset");
-
-  if (lastReset !== today) {
-    localStorage.clear();
-    localStorage.setItem("lastReset", today);
-  }
-
   document.getElementById("statusText").innerText =
     "Tracking for: " + today + " (resets after 3 AM)";
 }
@@ -156,25 +156,27 @@ function resetIfNeeded() {
 function loadState() {
   meds.forEach(id => {
     const btn = document.getElementById(id);
+    const ref = db.ref("dad/" + id);
 
-    if (localStorage.getItem(id) === "taken") {
-      btn.classList.add("taken");
-    }
+    ref.on("value", snapshot => {
+      if (snapshot.val() === true) {
+        btn.classList.add("taken");
+      } else {
+        btn.classList.remove("taken");
+      }
+    });
 
     btn.onclick = () => {
-      if (localStorage.getItem(id) === "taken") {
-        localStorage.removeItem(id);
-        btn.classList.remove("taken");
-      } else {
-        localStorage.setItem(id, "taken");
-        btn.classList.add("taken");
-      }
+      ref.once("value").then(snapshot => {
+        ref.set(!snapshot.val());
+      });
     };
   });
 }
 
 resetIfNeeded();
 loadState();
+
 </script>
 
 </body>
