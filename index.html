@@ -74,7 +74,6 @@
   }
 </style>
 
-<!-- Firebase config -->
 <script>
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
@@ -104,12 +103,12 @@ const db = firebase.database();
 <div class="section">
   <h2>Morning</h2>
 
-  <b>Before Food</b>
+  <b id="morningBeforeLabel">Before Food</b>
   <button class="btn" id="m1"></button>
   <button class="btn" id="m2"></button>
   <button class="btn" id="m3"></button>
 
-  <b>After Food</b>
+  <b id="morningAfterLabel">After Food</b>
   <button class="btn" id="m4"></button>
   <button class="btn" id="m5"></button>
   <button class="btn" id="m6"></button>
@@ -119,10 +118,10 @@ const db = firebase.database();
 <div class="section">
   <h2>Afternoon</h2>
 
-  <b>Before Food</b>
+  <b id="afternoonBeforeLabel">Before Food</b>
   <button class="btn" id="a1"></button>
 
-  <b>After Food</b>
+  <b id="afternoonAfterLabel">After Food</b>
   <button class="btn" id="a2"></button>
   <button class="btn" id="a3"></button>
   <button class="btn" id="a4"></button>
@@ -132,11 +131,11 @@ const db = firebase.database();
 <div class="section">
   <h2>Night</h2>
 
-  <b>Before Food</b>
+  <b id="nightBeforeLabel">Before Food</b>
   <button class="btn" id="n1"></button>
   <button class="btn" id="n2"></button>
 
-  <b>After Food</b>
+  <b id="nightAfterLabel">After Food</b>
   <button class="btn" id="n3"></button>
   <button class="btn" id="n4"></button>
   <button class="btn" id="n5"></button>
@@ -156,62 +155,46 @@ const meds = [
 "n1","n2","n3","n4","n5","n6","n7"
 ];
 
-
-//  DAD MEDICINES
-const dadMeds = {
-  m1: "Pan D",
-  m2: "Zavetox",
-  m3: "Fiasp Insulin",
-  m4: "Cilacar 10mg",
-  m5: "Omnacortil 5mg",
-  m6: "Nodosis 1g",
-
-  a1: "Fiasp Insulin",
-  a2: "Calci-CZ",
-  a3: "Silodal D8",
-  a4: "Moxovas",
-
-  n1: "Fiasp Insulin",
-  n2: "Zavetox",
-  n3: "Azoran 100mg",
-  n4: "Cilacar 20mg",
-  n5: "Ecosprin AV",
-  n6: "Nodosis",
-  n7: "Tresiba Insulin"
+const sections = {
+  morningBefore: ["m1","m2","m3"],
+  morningAfter: ["m4","m5","m6"],
+  afternoonBefore: ["a1"],
+  afternoonAfter: ["a2","a3","a4"],
+  nightBefore: ["n1","n2"],
+  nightAfter: ["n3","n4","n5","n6","n7"]
 };
 
 
-//  MOM MEDICINES
+// DAD
+const dadMeds = {
+  m1:"Pan D", m2:"Zavetox", m3:"Fiasp Insulin",
+  m4:"Cilacar 10mg", m5:"Omnacortil 5mg", m6:"Nodosis 1g",
+
+  a1:"Fiasp Insulin", a2:"Calci-CZ", a3:"Silodal D8", a4:"Moxovas",
+
+  n1:"Fiasp Insulin", n2:"Zavetox",
+  n3:"Azoran 100mg", n4:"Cilacar 20mg",
+  n5:"Ecosprin AV", n6:"Nodosis", n7:"Tresiba Insulin"
+};
+
+// MOM
 const momMeds = {
-  m1: "Thyronarm 75mg",
-  m2: "Pantocid",
-  m3: "",
+  m1:"Thyronarm 75mg", m2:"Pantocid", m3:"",
+  m4:"Omnacortil 2.5mg", m5:"", m6:"",
 
-  m4: "Omnacortil 2.5mg",
-  m5: "",
-  m6: "",
+  a1:"", a2:"Maltida Forte", a3:"Adgain Plus", a4:"",
 
-  a1: "",
-  a2: "Maltida Forte",
-  a3: "Adgain Plus",
-  a4: "",
-
-  n1: "",
-  n2: "",
-  n3: "HCQS 200mg",
-  n4: "",
-  n5: "",
-  n6: "",
-  n7: ""
+  n1:"", n2:"", n3:"HCQS 200mg",
+  n4:"", n5:"", n6:"", n7:""
 };
 
 
 function updateMedicineLabels() {
   const medsList = currentUser === "dad" ? dadMeds : momMeds;
 
+  // buttons
   meds.forEach(id => {
     const btn = document.getElementById(id);
-
     if (medsList[id]) {
       btn.style.display = "block";
       btn.innerText = medsList[id];
@@ -219,6 +202,19 @@ function updateMedicineLabels() {
       btn.style.display = "none";
     }
   });
+
+  // labels
+  function toggle(labelId, ids) {
+    const show = ids.some(id => medsList[id]);
+    document.getElementById(labelId).style.display = show ? "block" : "none";
+  }
+
+  toggle("morningBeforeLabel", sections.morningBefore);
+  toggle("morningAfterLabel", sections.morningAfter);
+  toggle("afternoonBeforeLabel", sections.afternoonBefore);
+  toggle("afternoonAfterLabel", sections.afternoonAfter);
+  toggle("nightBeforeLabel", sections.nightBefore);
+  toggle("nightAfterLabel", sections.nightAfter);
 }
 
 
@@ -239,17 +235,11 @@ function loadState() {
     ref.off();
 
     ref.on("value", snapshot => {
-      if (snapshot.val() === true) {
-        btn.classList.add("taken");
-      } else {
-        btn.classList.remove("taken");
-      }
+      btn.classList.toggle("taken", snapshot.val() === true);
     });
 
     btn.onclick = () => {
-      ref.once("value").then(s => {
-        ref.set(!s.val());
-      });
+      ref.once("value").then(s => ref.set(!s.val()));
     };
   });
 }
@@ -260,7 +250,6 @@ function switchUser(user) {
 
   document.getElementById("dadBtn").classList.remove("active");
   document.getElementById("momBtn").classList.remove("active");
-
   document.getElementById(user + "Btn").classList.add("active");
 
   document.getElementById("title").innerText =
