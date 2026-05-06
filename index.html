@@ -2,7 +2,6 @@
 <html>
 <head>
 
-<!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -10,68 +9,32 @@
 <title>Medicines Tracker</title>
 
 <style>
-  body {
-    font-family: Arial;
-    background: #f2f2f2;
-    margin: 0;
-    padding: 10px;
-  }
+body { font-family: Arial; background:#f2f2f2; padding:10px; }
 
-  h1 { text-align: center; }
+h1 { text-align:center; }
 
-  .toggle {
-    text-align: center;
-    margin-bottom: 15px;
-  }
+.toggle { text-align:center; margin-bottom:15px; }
 
-  .toggle button {
-    padding: 10px 20px;
-    margin: 5px;
-    border: none;
-    border-radius: 8px;
-    background: #ccc;
-    font-size: 16px;
-  }
+.toggle button {
+  padding:10px 20px; margin:5px; border:none;
+  border-radius:8px; background:#ccc;
+}
 
-  .active {
-    background: #2ecc71 !important;
-    color: white;
-  }
+.active { background:#2ecc71 !important; color:white; }
 
-  h2 { margin-top: 20px; }
+.btn {
+  width:100%; padding:18px; margin:8px 0;
+  border:none; border-radius:12px;
+  background:#9e9e9e; color:white;
+}
 
-  .section { margin-bottom: 15px; }
+.taken { background:#2ecc71; }
 
-  .btn {
-    width: 100%;
-    padding: 18px;
-    margin: 8px 0;
-    font-size: 18px;
-    border: none;
-    border-radius: 12px;
-    background: #9e9e9e;
-    color: white;
-  }
-
-  .taken { background: #2ecc71; }
-
-  .info {
-    text-align: center;
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 10px;
-  }
-
-  .reset-btn {
-    width: 100%;
-    padding: 14px;
-    margin-top: 25px;
-    border: none;
-    border-radius: 12px;
-    background: #e74c3c;
-    color: white;
-    font-size: 16px;
-  }
+.reset-btn {
+  width:100%; padding:14px; margin-top:25px;
+  border:none; border-radius:12px;
+  background:#e74c3c; color:white;
+}
 </style>
 
 <script>
@@ -97,171 +60,148 @@ const db = firebase.database();
   <button onclick="switchUser('mom')" id="momBtn">Mom</button>
 </div>
 
-<div class="info" id="statusText"></div>
+<!-- ADD MEDICINE -->
+<div>
+  <input id="medName" placeholder="Medicine name" style="width:100%;padding:10px;margin-bottom:8px;">
 
-<!-- MORNING -->
-<div class="section">
-  <h2>Morning</h2>
+  <select id="medTime" style="width:100%;padding:10px;margin-bottom:8px;">
+    <option value="morning">Morning</option>
+    <option value="afternoon">Afternoon</option>
+    <option value="night">Night</option>
+  </select>
 
-  <b id="morningBeforeLabel">Before Food</b>
-  <button class="btn" id="m1"></button>
-  <button class="btn" id="m2"></button>
-  <button class="btn" id="m3"></button>
+  <select id="medType" style="width:100%;padding:10px;margin-bottom:8px;">
+    <option value="before">Before Food</option>
+    <option value="after">After Food</option>
+  </select>
 
-  <b id="morningAfterLabel">After Food</b>
-  <button class="btn" id="m4"></button>
-  <button class="btn" id="m5"></button>
-  <button class="btn" id="m6"></button>
+  <button onclick="addMedicine()" style="width:100%;padding:12px;background:#3498db;color:white;border:none;border-radius:10px;">
+    Add Medicine
+  </button>
 </div>
 
-<!-- AFTERNOON -->
-<div class="section">
-  <h2>Afternoon</h2>
+<hr>
 
-  <b id="afternoonBeforeLabel">Before Food</b>
-  <button class="btn" id="a1"></button>
+<div id="medicineContainer"></div>
 
-  <b id="afternoonAfterLabel">After Food</b>
-  <button class="btn" id="a2"></button>
-  <button class="btn" id="a3"></button>
-  <button class="btn" id="a4"></button>
-</div>
-
-<!-- NIGHT -->
-<div class="section">
-  <h2>Night</h2>
-
-  <b id="nightBeforeLabel">Before Food</b>
-  <button class="btn" id="n1"></button>
-  <button class="btn" id="n2"></button>
-
-  <b id="nightAfterLabel">After Food</b>
-  <button class="btn" id="n3"></button>
-  <button class="btn" id="n4"></button>
-  <button class="btn" id="n5"></button>
-  <button class="btn" id="n6"></button>
-  <button class="btn" id="n7"></button>
-</div>
-
-<button class="reset-btn" onclick="confirmReset()">Reset All</button>
+<button class="reset-btn" onclick="resetAll()">Reset All</button>
 
 <script>
 
 let currentUser = "dad";
 
-const meds = [
-"m1","m2","m3","m4","m5","m6",
-"a1","a2","a3","a4",
-"n1","n2","n3","n4","n5","n6","n7"
-];
-
-const sections = {
-  morningBefore: ["m1","m2","m3"],
-  morningAfter: ["m4","m5","m6"],
-  afternoonBefore: ["a1"],
-  afternoonAfter: ["a2","a3","a4"],
-  nightBefore: ["n1","n2"],
-  nightAfter: ["n3","n4","n5","n6","n7"]
-};
-
-
-// DAD
-const dadMeds = {
-  m1:"Pan D", m2:"Zavetox", m3:"Fiasp Insulin",
-  m4:"Cilacar 10mg", m5:"Omnacortil 5mg", m6:"Nodosis 1g",
-
-  a1:"Fiasp Insulin", a2:"Calci-CZ", a3:"Silodal D8", a4:"Moxovas",
-
-  n1:"Fiasp Insulin", n2:"Zavetox",
-  n3:"Azoran 100mg", n4:"Cilacar 20mg",
-  n5:"Ecosprin AV", n6:"Nodosis", n7:"Tresiba Insulin"
-};
-
-// MOM
-const momMeds = {
-  m1:"Thyronarm 75mg", m2:"Pantocid", m3:"",
-  m4:"Omnacortil 2.5mg", m5:"", m6:"",
-
-  a1:"", a2:"Maltida Forte", a3:"Adgain Plus", a4:"",
-
-  n1:"", n2:"", n3:"HCQS 200mg",
-  n4:"", n5:"", n6:"", n7:""
-};
-
-
-function updateMedicineLabels() {
-  const medsList = currentUser === "dad" ? dadMeds : momMeds;
-
-  // buttons
-  meds.forEach(id => {
-    const btn = document.getElementById(id);
-    if (medsList[id]) {
-      btn.style.display = "block";
-      btn.innerText = medsList[id];
-    } else {
-      btn.style.display = "none";
-    }
-  });
-
-  // labels
-  function toggle(labelId, ids) {
-    const show = ids.some(id => medsList[id]);
-    document.getElementById(labelId).style.display = show ? "block" : "none";
-  }
-
-  toggle("morningBeforeLabel", sections.morningBefore);
-  toggle("morningAfterLabel", sections.morningAfter);
-  toggle("afternoonBeforeLabel", sections.afternoonBefore);
-  toggle("afternoonAfterLabel", sections.afternoonAfter);
-  toggle("nightBeforeLabel", sections.nightBefore);
-  toggle("nightAfterLabel", sections.nightAfter);
-}
-
-
-function confirmReset() {
-  if (confirm("Reset all medicines?")) {
-    meds.forEach(id => {
-      db.ref(currentUser + "/" + id).set(false);
-    });
-  }
-}
-
-
-function loadState() {
-  meds.forEach(id => {
-    const btn = document.getElementById(id);
-    const ref = db.ref(currentUser + "/" + id);
-
-    ref.off();
-
-    ref.on("value", snapshot => {
-      btn.classList.toggle("taken", snapshot.val() === true);
-    });
-
-    btn.onclick = () => {
-      ref.once("value").then(s => ref.set(!s.val()));
-    };
-  });
-}
-
-
-function switchUser(user) {
+function switchUser(user){
   currentUser = user;
 
   document.getElementById("dadBtn").classList.remove("active");
   document.getElementById("momBtn").classList.remove("active");
-  document.getElementById(user + "Btn").classList.add("active");
+  document.getElementById(user+"Btn").classList.add("active");
 
   document.getElementById("title").innerText =
     user === "dad" ? "Dad's Medicines" : "Mom's Medicines";
 
-  updateMedicineLabels();
-  loadState();
+  loadMedicines();
 }
 
 
-document.getElementById("statusText").innerText =
-  "Tracks daily medicines (real-time sync)";
+// ADD
+function addMedicine(){
+  const name = document.getElementById("medName").value;
+  const time = document.getElementById("medTime").value;
+  const type = document.getElementById("medType").value;
+
+  if(!name) return alert("Enter medicine");
+
+  db.ref(currentUser + "/medicines").push({
+    name, time, type, taken:false
+  });
+
+  document.getElementById("medName").value="";
+}
+
+
+// LOAD
+function loadMedicines(){
+  const ref = db.ref(currentUser + "/medicines");
+
+  ref.off();
+
+  ref.on("value", snap=>{
+    const data = snap.val() || {};
+    renderUI(data);
+  });
+}
+
+
+// RENDER
+function renderUI(data){
+
+  const container = document.getElementById("medicineContainer");
+  container.innerHTML = "";
+
+  const structure = {
+    morning:{before:[], after:[]},
+    afternoon:{before:[], after:[]},
+    night:{before:[], after:[]}
+  };
+
+  Object.entries(data).forEach(([key,med])=>{
+    structure[med.time][med.type].push({...med, key});
+  });
+
+  Object.entries(structure).forEach(([time,types])=>{
+
+    const section = document.createElement("div");
+    section.innerHTML = `<h2>${time}</h2>`;
+
+    ["before","after"].forEach(type=>{
+      if(types[type].length===0) return;
+
+      const label = document.createElement("b");
+      label.innerText = type === "before" ? "Before Food" : "After Food";
+      section.appendChild(label);
+
+      types[type].forEach(m=>{
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.innerText = m.name;
+
+        if(m.taken) btn.classList.add("taken");
+
+        btn.onclick = ()=>{
+          db.ref(currentUser+"/medicines/"+m.key)
+            .update({taken:!m.taken});
+        };
+
+        // DELETE (long press)
+        btn.oncontextmenu = (e)=>{
+          e.preventDefault();
+          if(confirm("Delete this medicine?")){
+            db.ref(currentUser+"/medicines/"+m.key).remove();
+          }
+        };
+
+        section.appendChild(btn);
+      });
+
+    });
+
+    container.appendChild(section);
+  });
+}
+
+
+// RESET
+function resetAll(){
+  if(confirm("Reset all medicines?")){
+    db.ref(currentUser + "/medicines").once("value",snap=>{
+      snap.forEach(child=>{
+        child.ref.update({taken:false});
+      });
+    });
+  }
+}
+
 
 switchUser("dad");
 
