@@ -8,9 +8,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; background:#f2f2f2; padding:10px; }
 
-h1 { text-align:center; }
+body {
+  font-family: Arial;
+  background:#f2f2f2;
+  padding:10px;
+  margin:0;
+}
+
+h1 {
+  text-align:center;
+}
 
 /* TOP TABS */
 .tabs {
@@ -18,6 +26,7 @@ h1 { text-align:center; }
   justify-content:center;
   margin-bottom:15px;
 }
+
 .tabs button {
   padding:10px 20px;
   margin:5px;
@@ -25,13 +34,18 @@ h1 { text-align:center; }
   border-radius:8px;
   background:#ccc;
 }
+
 .activeTab {
   background:#2ecc71 !important;
   color:white;
 }
 
 /* USER TOGGLE */
-.toggle { text-align:center; margin-bottom:15px; }
+.toggle {
+  text-align:center;
+  margin-bottom:15px;
+}
+
 .toggle button {
   padding:10px;
   margin:5px;
@@ -39,8 +53,13 @@ h1 { text-align:center; }
   border-radius:8px;
   background:#ccc;
 }
-.active { background:#2ecc71 !important; color:white; }
 
+.active {
+  background:#2ecc71 !important;
+  color:white;
+}
+
+/* MEDICINE BUTTONS */
 .btn {
   width:100%;
   padding:18px;
@@ -49,9 +68,14 @@ h1 { text-align:center; }
   border-radius:12px;
   background:#9e9e9e;
   color:white;
+  font-size:16px;
 }
-.taken { background:#2ecc71; }
 
+.taken {
+  background:#2ecc71;
+}
+
+/* RESET */
 .reset-btn {
   width:100%;
   padding:14px;
@@ -60,23 +84,26 @@ h1 { text-align:center; }
   border-radius:12px;
   background:#e74c3c;
   color:white;
+  font-size:16px;
 }
 
-/* FLOAT BUTTON */
+/* FLOATING BUTTON */
 .fab {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #3498db;
-  color: white;
-  font-size: 30px;
-  border: none;
+  position:fixed;
+  bottom:25px;
+  right:25px;
+  width:65px;
+  height:65px;
+  border-radius:50%;
+  border:none;
+  background:#3498db;
+  color:white;
+  font-size:34px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
+  z-index:999;
 }
 
-/* FORM */
+/* FORMS */
 .form {
   display:none;
   position:fixed;
@@ -85,24 +112,61 @@ h1 { text-align:center; }
   width:100%;
   background:white;
   padding:15px;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.2);
+  border-top-left-radius:20px;
+  border-top-right-radius:20px;
+  z-index:998;
 }
 
-input { width:100%; padding:10px; margin-bottom:8px; }
+input, select {
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
+}
+
+.form-btn {
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  margin-top:5px;
+  font-size:15px;
+}
+
+.save-btn {
+  background:#2ecc71;
+  color:white;
+}
+
+.cancel-btn {
+  background:#ccc;
+}
 
 /* TABLE */
 table {
   width:100%;
-  border-collapse: collapse;
+  border-collapse:collapse;
   background:white;
+  margin-top:15px;
 }
+
 th, td {
-  padding:8px;
   border:1px solid #ddd;
+  padding:10px;
   text-align:center;
 }
+
+th {
+  background:#f5f5f5;
+}
+
 </style>
 
 <script>
+
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "medicine-tracker-9acc2.firebaseapp.com",
@@ -112,6 +176,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
 </script>
 
 </head>
@@ -135,22 +200,18 @@ const db = firebase.database();
 <!-- MEDICINES -->
 <div id="medSection">
   <div id="container"></div>
-  <button class="reset-btn" onclick="resetAll()">Reset All</button>
+
+  <button class="reset-btn" onclick="resetAll()">
+    Reset All
+  </button>
 </div>
 
-<!-- BP SECTION -->
+<!-- BP -->
 <div id="bpSection" style="display:none;">
 
-  <button onclick="toggleBPForm()" class="btn">+ Add BP</button>
-
-  <div id="bpForm" class="form">
-    <input id="systolic" placeholder="Systolic (upper)">
-    <input id="diastolic" placeholder="Diastolic (lower)">
-    <button onclick="saveBP()" class="btn">Save</button>
-    <button onclick="toggleBPForm()" class="btn">Cancel</button>
-  </div>
-
-  <button onclick="copyTable()" class="btn">Copy Table</button>
+  <button onclick="copyTable()" class="btn">
+    Copy Table
+  </button>
 
   <table id="bpTable">
     <tr>
@@ -162,164 +223,425 @@ const db = firebase.database();
 
 </div>
 
+<!-- FLOATING BUTTON -->
+<button class="fab" id="fabButton" onclick="handleFabClick()">
+  +
+</button>
+
+<!-- MEDICINE FORM -->
+<div id="medForm" class="form">
+
+  <input id="medName" placeholder="Medicine name">
+
+  <select id="medTime">
+    <option value="morning">Morning</option>
+    <option value="afternoon">Afternoon</option>
+    <option value="night">Night</option>
+  </select>
+
+  <select id="medType">
+    <option value="before">Before Food</option>
+    <option value="after">After Food</option>
+  </select>
+
+  <button class="form-btn save-btn" onclick="addMedicine()">
+    Save Medicine
+  </button>
+
+  <button class="form-btn cancel-btn" onclick="toggleMedicineForm()">
+    Cancel
+  </button>
+
+</div>
+
+<!-- BP FORM -->
+<div id="bpForm" class="form">
+
+  <input id="systolic" placeholder="Systolic (upper)">
+  <input id="diastolic" placeholder="Diastolic (lower)">
+
+  <button class="form-btn save-btn" onclick="saveBP()">
+    Save BP
+  </button>
+
+  <button class="form-btn cancel-btn" onclick="toggleBPForm()">
+    Cancel
+  </button>
+
+</div>
+
 <script>
 
-let currentUser="dad";
+let currentUser = "dad";
+let currentTab = "med";
 
-/* TAB SWITCH */
+/* ---------- TAB SWITCH ---------- */
+
 function switchTab(tab){
-  document.getElementById("medSection").style.display = tab==="med"?"block":"none";
-  document.getElementById("bpSection").style.display = tab==="bp"?"block":"none";
 
-  document.getElementById("medTab").classList.toggle("activeTab",tab==="med");
-  document.getElementById("bpTab").classList.toggle("activeTab",tab==="bp");
+  currentTab = tab;
 
-  if(tab==="bp") loadBP();
+  document.getElementById("medSection").style.display =
+    tab === "med" ? "block" : "none";
+
+  document.getElementById("bpSection").style.display =
+    tab === "bp" ? "block" : "none";
+
+  document.getElementById("medTab")
+    .classList.toggle("activeTab", tab === "med");
+
+  document.getElementById("bpTab")
+    .classList.toggle("activeTab", tab === "bp");
+
+  closeAllForms();
+
+  if(tab === "bp"){
+    loadBP();
+  }
 }
 
-/* USER */
+/* ---------- USER SWITCH ---------- */
+
 function switchUser(user){
-  currentUser=user;
-  document.getElementById("dadBtn").classList.remove("active");
-  document.getElementById("momBtn").classList.remove("active");
-  document.getElementById(user+"Btn").classList.add("active");
+
+  currentUser = user;
+
+  document.getElementById("dadBtn")
+    .classList.remove("active");
+
+  document.getElementById("momBtn")
+    .classList.remove("active");
+
+  document.getElementById(user + "Btn")
+    .classList.add("active");
 
   load();
   loadBP();
 }
 
-/* ---------- MEDICINES (unchanged core) ---------- */
+/* ---------- FAB ---------- */
+
+function handleFabClick(){
+
+  if(currentTab === "med"){
+    toggleMedicineForm();
+  } else {
+    toggleBPForm();
+  }
+}
+
+function updateFab(symbol){
+  document.getElementById("fabButton").innerText = symbol;
+}
+
+/* ---------- FORM CONTROLS ---------- */
+
+function closeAllForms(){
+
+  document.getElementById("medForm").style.display = "none";
+  document.getElementById("bpForm").style.display = "none";
+
+  updateFab("+");
+}
+
+function toggleMedicineForm(){
+
+  const form = document.getElementById("medForm");
+
+  if(form.style.display === "block"){
+    form.style.display = "none";
+    updateFab("+");
+  } else {
+    closeAllForms();
+    form.style.display = "block";
+    updateFab("×");
+  }
+}
+
+function toggleBPForm(){
+
+  const form = document.getElementById("bpForm");
+
+  if(form.style.display === "block"){
+    form.style.display = "none";
+    updateFab("+");
+  } else {
+    closeAllForms();
+    form.style.display = "block";
+    updateFab("×");
+  }
+}
+
+/* ---------- ADD MEDICINE ---------- */
+
+function addMedicine(){
+
+  const name =
+    document.getElementById("medName").value.trim();
+
+  const time =
+    document.getElementById("medTime").value;
+
+  const type =
+    document.getElementById("medType").value;
+
+  if(!name){
+    alert("Enter medicine name");
+    return;
+  }
+
+  db.ref(currentUser + "/medicines").push({
+    name,
+    time,
+    type,
+    taken:false
+  });
+
+  document.getElementById("medName").value = "";
+
+  closeAllForms();
+}
+
+/* ---------- LOAD MEDICINES ---------- */
+
 function load(){
-  const ref=db.ref(currentUser+"/medicines");
+
+  const ref = db.ref(currentUser + "/medicines");
+
   ref.off();
-  ref.on("value",snap=>{
-    const data=snap.val()||{};
+
+  ref.on("value", snap => {
+
+    const data = snap.val() || {};
+
     render(data);
   });
 }
 
-function render(data){
-  const container=document.getElementById("container");
-  container.innerHTML="";
+/* ---------- RENDER MEDICINES ---------- */
 
-  const layout={
+function render(data){
+
+  const container =
+    document.getElementById("container");
+
+  container.innerHTML = "";
+
+  const layout = {
     morning:{before:[],after:[]},
     afternoon:{before:[],after:[]},
     night:{before:[],after:[]}
   };
 
-  Object.entries(data).forEach(([k,m])=>{
-    const t=m.time?.toLowerCase();
-    if(layout[t]) layout[t][m.type].push({...m,key:k});
+  Object.entries(data).forEach(([k,m]) => {
+
+    const t = m.time?.toLowerCase();
+
+    if(layout[t]){
+      layout[t][m.type].push({...m,key:k});
+    }
   });
 
-  Object.entries(layout).forEach(([time,types])=>{
-    const section=document.createElement("div");
-    section.innerHTML=`<h2>${time.charAt(0).toUpperCase()+time.slice(1)}</h2>`;
+  Object.entries(layout).forEach(([time,types]) => {
 
-    ["before","after"].forEach(type=>{
-      if(types[type].length===0) return;
+    const section = document.createElement("div");
 
-      const label=document.createElement("b");
-      label.innerText=type==="before"?"Before Food":"After Food";
+    section.innerHTML =
+      `<h2>${time.charAt(0).toUpperCase()+time.slice(1)}</h2>`;
+
+    ["before","after"].forEach(type => {
+
+      if(types[type].length === 0) return;
+
+      const label = document.createElement("b");
+
+      label.innerText =
+        type === "before"
+        ? "Before Food"
+        : "After Food";
+
       section.appendChild(label);
 
-      types[type].forEach(m=>{
-        const btn=document.createElement("button");
-        btn.className="btn";
-        btn.innerText=m.name;
-        if(m.taken) btn.classList.add("taken");
+      types[type].forEach(m => {
 
-        btn.onclick=()=>{
-          db.ref(currentUser+"/medicines/"+m.key).update({taken:!m.taken});
+        const btn = document.createElement("button");
+
+        btn.className = "btn";
+
+        btn.innerText = m.name;
+
+        if(m.taken){
+          btn.classList.add("taken");
+        }
+
+        /* TOGGLE */
+        btn.onclick = () => {
+
+          db.ref(currentUser+"/medicines/"+m.key)
+            .update({taken:!m.taken});
         };
 
-        btn.oncontextmenu=(e)=>{
+        /* DELETE */
+        btn.oncontextmenu = (e) => {
+
           e.preventDefault();
-          if(confirm("Delete?")){
-            db.ref(currentUser+"/medicines/"+m.key).remove();
+
+          if(confirm("Delete this medicine?")){
+
+            db.ref(currentUser+"/medicines/"+m.key)
+              .remove();
+          }
+        };
+
+        /* EDIT */
+        btn.ondblclick = () => {
+
+          const newName =
+            prompt("Edit medicine name:", m.name);
+
+          if(newName){
+
+            db.ref(currentUser+"/medicines/"+m.key)
+              .update({name:newName});
           }
         };
 
         section.appendChild(btn);
       });
+
     });
 
     container.appendChild(section);
   });
 }
 
+/* ---------- RESET ---------- */
+
 function resetAll(){
-  db.ref(currentUser+"/medicines").once("value",snap=>{
-    snap.forEach(c=>c.ref.update({taken:false}));
-  });
+
+  if(confirm("Reset all medicines?")){
+
+    db.ref(currentUser+"/medicines")
+      .once("value", snap => {
+
+        snap.forEach(c => {
+          c.ref.update({taken:false});
+        });
+      });
+  }
 }
 
-/* ---------- BP ---------- */
-
-function toggleBPForm(){
-  const f=document.getElementById("bpForm");
-  f.style.display=f.style.display==="block"?"none":"block";
-}
+/* ---------- SAVE BP ---------- */
 
 function saveBP(){
-  const s=document.getElementById("systolic").value;
-  const d=document.getElementById("diastolic").value;
 
-  if(!s||!d) return alert("Enter values");
+  const s =
+    document.getElementById("systolic")
+      .value.trim();
+
+  const d =
+    document.getElementById("diastolic")
+      .value.trim();
+
+  if(!s || !d){
+    alert("Enter values");
+    return;
+  }
 
   db.ref(currentUser+"/bp").push({
     systolic:s,
     diastolic:d,
-    time: new Date().toLocaleString(),
-    timestamp: Date.now()
+    time:new Date().toLocaleString(),
+    timestamp:Date.now()
   });
 
-  toggleBPForm();
+  /* CLEAR */
+  document.getElementById("systolic").value = "";
+  document.getElementById("diastolic").value = "";
+
+  closeAllForms();
 }
 
+/* ---------- LOAD BP ---------- */
+
 function loadBP(){
-  const ref=db.ref(currentUser+"/bp");
+
+  const ref = db.ref(currentUser+"/bp");
+
   ref.off();
 
-  ref.on("value",snap=>{
-    const data=snap.val()||{};
+  ref.on("value", snap => {
+
+    const data = snap.val() || {};
+
     renderBP(data);
   });
 }
 
+/* ---------- RENDER BP ---------- */
+
 function renderBP(data){
-  const table=document.getElementById("bpTable");
-  table.innerHTML=`
+
+  const table =
+    document.getElementById("bpTable");
+
+  table.innerHTML = `
     <tr>
       <th>Time</th>
       <th>Systolic</th>
       <th>Diastolic</th>
-    </tr>`;
+    </tr>
+  `;
 
-  Object.values(data).forEach(m=>{
-    const row=table.insertRow();
-    row.insertCell(0).innerText=m.time;
-    row.insertCell(1).innerText=m.systolic;
-    row.insertCell(2).innerText=m.diastolic;
+  Object.entries(data).forEach(([key,m]) => {
+
+    const row = table.insertRow();
+
+    row.insertCell(0).innerText = m.time;
+    row.insertCell(1).innerText = m.systolic;
+    row.insertCell(2).innerText = m.diastolic;
+
+    /* DELETE */
+    row.oncontextmenu = (e) => {
+
+      e.preventDefault();
+
+      if(confirm("Delete this BP reading?")){
+
+        db.ref(currentUser+"/bp/"+key)
+          .remove();
+      }
+    };
   });
 }
 
-function copyTable(){
-  let text="Time\tSystolic\tDiastolic\n";
-  const rows=document.querySelectorAll("#bpTable tr");
+/* ---------- COPY TABLE ---------- */
 
-  rows.forEach((r,i)=>{
-    if(i===0) return;
-    const cols=r.querySelectorAll("td");
-    text+=`${cols[0].innerText}\t${cols[1].innerText}\t${cols[2].innerText}\n`;
+function copyTable(){
+
+  let text =
+    "Time\tSystolic\tDiastolic\n";
+
+  const rows =
+    document.querySelectorAll("#bpTable tr");
+
+  rows.forEach((r,i) => {
+
+    if(i === 0) return;
+
+    const cols = r.querySelectorAll("td");
+
+    text +=
+      `${cols[0].innerText}\t${cols[1].innerText}\t${cols[2].innerText}\n`;
   });
 
   navigator.clipboard.writeText(text);
+
   alert("Copied!");
 }
 
-/* INIT */
+/* ---------- INIT ---------- */
+
 switchTab("med");
 switchUser("dad");
 
