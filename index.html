@@ -57,6 +57,59 @@ h1 { text-align:center; }
   background:#e74c3c;
   color:white;
 }
+
+/* FLOATING BUTTON */
+.fab {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #3498db;
+  color: white;
+  font-size: 30px;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* FORM MODAL */
+.form-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  padding: 15px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+  display: none;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+input, select {
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+}
+
+.save-btn {
+  width:100%;
+  padding:12px;
+  background:#2ecc71;
+  color:white;
+  border:none;
+  border-radius:10px;
+}
+
+.cancel-btn {
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  background:#ccc;
+  border:none;
+  border-radius:10px;
+}
 </style>
 
 <script>
@@ -82,33 +135,43 @@ const db = firebase.database();
   <button onclick="switchUser('mom')" id="momBtn">Mom</button>
 </div>
 
-<!-- ADD MEDICINE -->
-<input id="medName" placeholder="Medicine name" style="width:100%;padding:10px;margin-bottom:8px;">
-
-<select id="medTime" style="width:100%;padding:10px;margin-bottom:8px;">
-  <option value="morning">Morning</option>
-  <option value="afternoon">Afternoon</option>
-  <option value="night">Night</option>
-</select>
-
-<select id="medType" style="width:100%;padding:10px;margin-bottom:8px;">
-  <option value="before">Before Food</option>
-  <option value="after">After Food</option>
-</select>
-
-<button onclick="addMedicine()" style="width:100%;padding:12px;background:#3498db;color:white;border:none;border-radius:10px;">
-  Add Medicine
-</button>
-
-<hr>
-
 <div id="container"></div>
 
 <button class="reset-btn" onclick="resetAll()">Reset All</button>
 
+<!-- FLOATING BUTTON -->
+<button class="fab" onclick="toggleForm()">+</button>
+
+<!-- ADD FORM -->
+<div id="addForm" class="form-container">
+
+  <input id="medName" placeholder="Medicine name">
+
+  <select id="medTime">
+    <option value="morning">Morning</option>
+    <option value="afternoon">Afternoon</option>
+    <option value="night">Night</option>
+  </select>
+
+  <select id="medType">
+    <option value="before">Before Food</option>
+    <option value="after">After Food</option>
+  </select>
+
+  <button class="save-btn" onclick="addMedicine()">Save Medicine</button>
+  <button class="cancel-btn" onclick="toggleForm()">Cancel</button>
+
+</div>
+
 <script>
 
 let currentUser = "dad";
+
+/* ---------- FORM TOGGLE ---------- */
+function toggleForm(){
+  const form = document.getElementById("addForm");
+  form.style.display = form.style.display === "block" ? "none" : "block";
+}
 
 /* ---------- SWITCH USER ---------- */
 function switchUser(user){
@@ -140,6 +203,7 @@ function addMedicine(){
   });
 
   document.getElementById("medName").value="";
+  document.getElementById("addForm").style.display = "none";
 }
 
 /* ---------- LOAD ---------- */
@@ -172,11 +236,8 @@ function render(data){
   };
 
   Object.entries(data).forEach(([key,m])=>{
-
     const time = m.time?.toLowerCase();
-
-    if(!layout[time]) return; // safety
-
+    if(!layout[time]) return;
     layout[time][m.type].push({...m,key});
   });
 
@@ -201,13 +262,11 @@ function render(data){
 
         if(m.taken) btn.classList.add("taken");
 
-        /* TOGGLE */
         btn.onclick = ()=>{
           db.ref(currentUser+"/medicines/"+m.key)
             .update({taken: !m.taken});
         };
 
-        /* DELETE (long press / right click) */
         btn.oncontextmenu = (e)=>{
           e.preventDefault();
           if(confirm("Delete this medicine?")){
@@ -215,7 +274,6 @@ function render(data){
           }
         };
 
-        /* EDIT (double click) */
         btn.ondblclick = ()=>{
           const newName = prompt("Edit medicine name:", m.name);
           if(newName){
