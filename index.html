@@ -8,25 +8,54 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; background:#f2f2f2; padding:10px; }
+body {
+  font-family: Arial;
+  background:#f2f2f2;
+  padding:10px;
+}
 
 h1 { text-align:center; }
 
-.toggle { text-align:center; margin-bottom:15px; }
-.toggle button { padding:10px; margin:5px; border:none; border-radius:8px; background:#ccc; }
-.active { background:#2ecc71 !important; color:white; }
+.toggle {
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.toggle button {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:8px;
+  background:#ccc;
+}
+
+.active {
+  background:#2ecc71 !important;
+  color:white;
+}
 
 .btn {
-  width:100%; padding:18px; margin:8px 0;
-  border:none; border-radius:12px;
-  background:#9e9e9e; color:white;
+  width:100%;
+  padding:18px;
+  margin:8px 0;
+  border:none;
+  border-radius:12px;
+  background:#9e9e9e;
+  color:white;
 }
-.taken { background:#2ecc71; }
+
+.taken {
+  background:#2ecc71;
+}
 
 .reset-btn {
-  width:100%; padding:14px; margin-top:25px;
-  border:none; border-radius:12px;
-  background:#e74c3c; color:white;
+  width:100%;
+  padding:14px;
+  margin-top:25px;
+  border:none;
+  border-radius:12px;
+  background:#e74c3c;
+  color:white;
 }
 </style>
 
@@ -53,13 +82,13 @@ const db = firebase.database();
   <button onclick="switchUser('mom')" id="momBtn">Mom</button>
 </div>
 
-<!-- ADD -->
+<!-- ADD MEDICINE -->
 <input id="medName" placeholder="Medicine name" style="width:100%;padding:10px;margin-bottom:8px;">
 
 <select id="medTime" style="width:100%;padding:10px;margin-bottom:8px;">
-  <option value="Morning">Morning</option>
-  <option value="Afternoon">Afternoon</option>
-  <option value="Night">Night</option>
+  <option value="morning">Morning</option>
+  <option value="afternoon">Afternoon</option>
+  <option value="night">Night</option>
 </select>
 
 <select id="medType" style="width:100%;padding:10px;margin-bottom:8px;">
@@ -68,7 +97,7 @@ const db = firebase.database();
 </select>
 
 <button onclick="addMedicine()" style="width:100%;padding:12px;background:#3498db;color:white;border:none;border-radius:10px;">
-Add Medicine
+  Add Medicine
 </button>
 
 <hr>
@@ -81,6 +110,7 @@ Add Medicine
 
 let currentUser = "dad";
 
+/* ---------- SWITCH USER ---------- */
 function switchUser(user){
   currentUser = user;
 
@@ -91,20 +121,28 @@ function switchUser(user){
   load();
 }
 
+/* ---------- ADD ---------- */
 function addMedicine(){
-  const name = medName.value;
-  const time = medTime.value;
-  const type = medType.value;
+  const name = document.getElementById("medName").value.trim();
+  const time = document.getElementById("medTime").value.toLowerCase();
+  const type = document.getElementById("medType").value;
 
-  if(!name) return alert("Enter name");
+  if(!name){
+    alert("Enter medicine name");
+    return;
+  }
 
   db.ref(currentUser+"/medicines").push({
-    name, time, type, taken:false
+    name,
+    time,
+    type,
+    taken:false
   });
 
-  medName.value="";
+  document.getElementById("medName").value="";
 }
 
+/* ---------- LOAD ---------- */
 function load(){
   const ref = db.ref(currentUser+"/medicines");
 
@@ -116,6 +154,12 @@ function load(){
   });
 }
 
+/* ---------- FORMAT ---------- */
+function formatText(str){
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/* ---------- RENDER ---------- */
 function render(data){
 
   const container = document.getElementById("container");
@@ -128,45 +172,52 @@ function render(data){
   };
 
   Object.entries(data).forEach(([key,m])=>{
-    layout[m.time][m.type].push({...m,key});
+
+    const time = m.time?.toLowerCase();
+
+    if(!layout[time]) return; // safety
+
+    layout[time][m.type].push({...m,key});
   });
 
   Object.entries(layout).forEach(([time,types])=>{
 
     const section = document.createElement("div");
-    section.innerHTML = `<h2>${time}</h2>`;
+    section.innerHTML = `<h2>${formatText(time)}</h2>`;
 
     ["before","after"].forEach(type=>{
-      if(types[type].length===0) return;
+
+      if(types[type].length === 0) return;
 
       const label = document.createElement("b");
-      label.innerText = type==="before"?"Before Food":"After Food";
+      label.innerText = type === "before" ? "Before Food" : "After Food";
       section.appendChild(label);
 
       types[type].forEach(m=>{
+
         const btn = document.createElement("button");
-        btn.className="btn";
-        btn.innerText=m.name;
+        btn.className = "btn";
+        btn.innerText = m.name;
 
         if(m.taken) btn.classList.add("taken");
 
-        // toggle
-        btn.onclick=()=>{
+        /* TOGGLE */
+        btn.onclick = ()=>{
           db.ref(currentUser+"/medicines/"+m.key)
-            .update({taken:!m.taken});
+            .update({taken: !m.taken});
         };
 
-        // delete (right click / long press)
-        btn.oncontextmenu=(e)=>{
+        /* DELETE (long press / right click) */
+        btn.oncontextmenu = (e)=>{
           e.preventDefault();
-          if(confirm("Delete?")){
+          if(confirm("Delete this medicine?")){
             db.ref(currentUser+"/medicines/"+m.key).remove();
           }
         };
 
-        // edit (double click)
-        btn.ondblclick=()=>{
-          const newName = prompt("Edit medicine:", m.name);
+        /* EDIT (double click) */
+        btn.ondblclick = ()=>{
+          const newName = prompt("Edit medicine name:", m.name);
           if(newName){
             db.ref(currentUser+"/medicines/"+m.key)
               .update({name:newName});
@@ -182,16 +233,18 @@ function render(data){
   });
 }
 
+/* ---------- RESET ---------- */
 function resetAll(){
-  if(confirm("Reset all?")){
+  if(confirm("Reset all medicines?")){
     db.ref(currentUser+"/medicines").once("value",snap=>{
-      snap.forEach(c=>{
-        c.ref.update({taken:false});
+      snap.forEach(child=>{
+        child.ref.update({taken:false});
       });
     });
   }
 }
 
+/* ---------- INIT ---------- */
 switchUser("dad");
 
 </script>
