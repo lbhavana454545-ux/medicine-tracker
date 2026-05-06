@@ -10,24 +10,22 @@
 
 <style>
 body { font-family: Arial; background:#f2f2f2; padding:10px; }
-
 h1 { text-align:center; }
 
 .toggle { text-align:center; margin-bottom:15px; }
-
 .toggle button {
-  padding:10px 20px; margin:5px; border:none;
-  border-radius:8px; background:#ccc;
+  padding:10px 20px; margin:5px;
+  border:none; border-radius:8px; background:#ccc;
 }
-
 .active { background:#2ecc71 !important; color:white; }
+
+.section { margin-bottom:15px; }
 
 .btn {
   width:100%; padding:18px; margin:8px 0;
   border:none; border-radius:12px;
   background:#9e9e9e; color:white;
 }
-
 .taken { background:#2ecc71; }
 
 .reset-btn {
@@ -60,29 +58,70 @@ const db = firebase.database();
   <button onclick="switchUser('mom')" id="momBtn">Mom</button>
 </div>
 
-<!-- ADD MEDICINE -->
-<div>
-  <input id="medName" placeholder="Medicine name" style="width:100%;padding:10px;margin-bottom:8px;">
+<!-- FIXED MEDICINES -->
+<div class="section">
+  <h2>Morning</h2>
 
-  <select id="medTime" style="width:100%;padding:10px;margin-bottom:8px;">
-    <option value="morning">Morning</option>
-    <option value="afternoon">Afternoon</option>
-    <option value="night">Night</option>
-  </select>
+  <b id="morningBeforeLabel">Before Food</b>
+  <button class="btn" id="m1"></button>
+  <button class="btn" id="m2"></button>
+  <button class="btn" id="m3"></button>
 
-  <select id="medType" style="width:100%;padding:10px;margin-bottom:8px;">
-    <option value="before">Before Food</option>
-    <option value="after">After Food</option>
-  </select>
-
-  <button onclick="addMedicine()" style="width:100%;padding:12px;background:#3498db;color:white;border:none;border-radius:10px;">
-    Add Medicine
-  </button>
+  <b id="morningAfterLabel">After Food</b>
+  <button class="btn" id="m4"></button>
+  <button class="btn" id="m5"></button>
+  <button class="btn" id="m6"></button>
 </div>
 
-<hr>
+<div class="section">
+  <h2>Afternoon</h2>
 
-<div id="medicineContainer"></div>
+  <b id="afternoonBeforeLabel">Before Food</b>
+  <button class="btn" id="a1"></button>
+
+  <b id="afternoonAfterLabel">After Food</b>
+  <button class="btn" id="a2"></button>
+  <button class="btn" id="a3"></button>
+  <button class="btn" id="a4"></button>
+</div>
+
+<div class="section">
+  <h2>Night</h2>
+
+  <b id="nightBeforeLabel">Before Food</b>
+  <button class="btn" id="n1"></button>
+  <button class="btn" id="n2"></button>
+
+  <b id="nightAfterLabel">After Food</b>
+  <button class="btn" id="n3"></button>
+  <button class="btn" id="n4"></button>
+  <button class="btn" id="n5"></button>
+  <button class="btn" id="n6"></button>
+  <button class="btn" id="n7"></button>
+</div>
+
+<!-- CUSTOM MEDICINES -->
+<hr>
+<h2>Additional Medicines</h2>
+
+<input id="medName" placeholder="Medicine name" style="width:100%;padding:10px;margin-bottom:8px;">
+
+<select id="medTime" style="width:100%;padding:10px;margin-bottom:8px;">
+  <option value="morning">Morning</option>
+  <option value="afternoon">Afternoon</option>
+  <option value="night">Night</option>
+</select>
+
+<select id="medType" style="width:100%;padding:10px;margin-bottom:8px;">
+  <option value="before">Before Food</option>
+  <option value="after">After Food</option>
+</select>
+
+<button onclick="addCustomMedicine()" style="width:100%;padding:12px;background:#3498db;color:white;border:none;border-radius:10px;">
+Add Medicine
+</button>
+
+<div id="customContainer"></div>
 
 <button class="reset-btn" onclick="resetAll()">Reset All</button>
 
@@ -90,111 +129,135 @@ const db = firebase.database();
 
 let currentUser = "dad";
 
-function switchUser(user){
-  currentUser = user;
+const meds = ["m1","m2","m3","m4","m5","m6","a1","a2","a3","a4","n1","n2","n3","n4","n5","n6","n7"];
 
-  document.getElementById("dadBtn").classList.remove("active");
-  document.getElementById("momBtn").classList.remove("active");
-  document.getElementById(user+"Btn").classList.add("active");
+const sections = {
+  morningBefore:["m1","m2","m3"],
+  morningAfter:["m4","m5","m6"],
+  afternoonBefore:["a1"],
+  afternoonAfter:["a2","a3","a4"],
+  nightBefore:["n1","n2"],
+  nightAfter:["n3","n4","n5","n6","n7"]
+};
 
-  document.getElementById("title").innerText =
-    user === "dad" ? "Dad's Medicines" : "Mom's Medicines";
+// FIXED DATA
+const dadMeds = {
+  m1:"Pan D", m2:"Zavetox", m3:"Fiasp Insulin",
+  m4:"Cilacar 10mg", m5:"Omnacortil 5mg", m6:"Nodosis 1g",
+  a1:"Fiasp Insulin", a2:"Calci-CZ", a3:"Silodal D8", a4:"Moxovas",
+  n1:"Fiasp Insulin", n2:"Zavetox",
+  n3:"Azoran 100mg", n4:"Cilacar 20mg", n5:"Ecosprin AV", n6:"Nodosis", n7:"Tresiba Insulin"
+};
 
-  loadMedicines();
+const momMeds = {
+  m1:"Thyronarm 75mg", m2:"Pantocid", m3:"",
+  m4:"Omnacortil 2.5mg", m5:"", m6:"",
+  a1:"", a2:"Maltida Forte", a3:"Adgain Plus", a4:"",
+  n1:"", n2:"", n3:"HCQS 200mg",
+  n4:"", n5:"", n6:"", n7:""
+};
+
+// UPDATE UI
+function updateMedicineLabels(){
+  const list = currentUser==="dad"?dadMeds:momMeds;
+
+  meds.forEach(id=>{
+    const btn=document.getElementById(id);
+    if(list[id]){
+      btn.style.display="block";
+      btn.innerText=list[id];
+    } else btn.style.display="none";
+  });
+
+  function toggle(label,ids){
+    const show=ids.some(id=>list[id]);
+    document.getElementById(label).style.display=show?"block":"none";
+  }
+
+  toggle("morningBeforeLabel",sections.morningBefore);
+  toggle("morningAfterLabel",sections.morningAfter);
+  toggle("afternoonBeforeLabel",sections.afternoonBefore);
+  toggle("afternoonAfterLabel",sections.afternoonAfter);
+  toggle("nightBeforeLabel",sections.nightBefore);
+  toggle("nightAfterLabel",sections.nightAfter);
 }
 
+// FIXED STATE
+function loadState(){
+  meds.forEach(id=>{
+    const btn=document.getElementById(id);
+    const ref=db.ref(currentUser+"/"+id);
 
-// ADD
-function addMedicine(){
-  const name = document.getElementById("medName").value;
-  const time = document.getElementById("medTime").value;
-  const type = document.getElementById("medType").value;
+    ref.off();
+
+    ref.on("value",snap=>{
+      btn.classList.toggle("taken",snap.val()===true);
+    });
+
+    btn.onclick=()=>{
+      ref.once("value").then(s=>ref.set(!s.val()));
+    };
+  });
+}
+
+// ADD CUSTOM
+function addCustomMedicine(){
+  const name=document.getElementById("medName").value;
+  const time=document.getElementById("medTime").value;
+  const type=document.getElementById("medType").value;
 
   if(!name) return alert("Enter medicine");
 
-  db.ref(currentUser + "/medicines").push({
-    name, time, type, taken:false
+  db.ref(currentUser+"/custom").push({
+    name,time,type,taken:false
   });
 
   document.getElementById("medName").value="";
 }
 
-
-// LOAD
-function loadMedicines(){
-  const ref = db.ref(currentUser + "/medicines");
+// LOAD CUSTOM
+function loadCustom(){
+  const ref=db.ref(currentUser+"/custom");
 
   ref.off();
 
-  ref.on("value", snap=>{
-    const data = snap.val() || {};
-    renderUI(data);
-  });
-}
+  ref.on("value",snap=>{
+    const data=snap.val()||{};
+    const container=document.getElementById("customContainer");
+    container.innerHTML="";
 
+    Object.entries(data).forEach(([key,med])=>{
+      const btn=document.createElement("button");
+      btn.className="btn";
+      btn.innerText=`${med.name} (${med.time}-${med.type})`;
 
-// RENDER
-function renderUI(data){
+      if(med.taken) btn.classList.add("taken");
 
-  const container = document.getElementById("medicineContainer");
-  container.innerHTML = "";
+      btn.onclick=()=>{
+        db.ref(currentUser+"/custom/"+key)
+          .update({taken:!med.taken});
+      };
 
-  const structure = {
-    morning:{before:[], after:[]},
-    afternoon:{before:[], after:[]},
-    night:{before:[], after:[]}
-  };
+      btn.oncontextmenu=(e)=>{
+        e.preventDefault();
+        if(confirm("Delete?")){
+          db.ref(currentUser+"/custom/"+key).remove();
+        }
+      };
 
-  Object.entries(data).forEach(([key,med])=>{
-    structure[med.time][med.type].push({...med, key});
-  });
-
-  Object.entries(structure).forEach(([time,types])=>{
-
-    const section = document.createElement("div");
-    section.innerHTML = `<h2>${time}</h2>`;
-
-    ["before","after"].forEach(type=>{
-      if(types[type].length===0) return;
-
-      const label = document.createElement("b");
-      label.innerText = type === "before" ? "Before Food" : "After Food";
-      section.appendChild(label);
-
-      types[type].forEach(m=>{
-        const btn = document.createElement("button");
-        btn.className = "btn";
-        btn.innerText = m.name;
-
-        if(m.taken) btn.classList.add("taken");
-
-        btn.onclick = ()=>{
-          db.ref(currentUser+"/medicines/"+m.key)
-            .update({taken:!m.taken});
-        };
-
-        // DELETE (long press)
-        btn.oncontextmenu = (e)=>{
-          e.preventDefault();
-          if(confirm("Delete this medicine?")){
-            db.ref(currentUser+"/medicines/"+m.key).remove();
-          }
-        };
-
-        section.appendChild(btn);
-      });
-
+      container.appendChild(btn);
     });
-
-    container.appendChild(section);
   });
 }
-
 
 // RESET
 function resetAll(){
-  if(confirm("Reset all medicines?")){
-    db.ref(currentUser + "/medicines").once("value",snap=>{
+  if(confirm("Reset all?")){
+    meds.forEach(id=>{
+      db.ref(currentUser+"/"+id).set(false);
+    });
+
+    db.ref(currentUser+"/custom").once("value",snap=>{
       snap.forEach(child=>{
         child.ref.update({taken:false});
       });
@@ -202,6 +265,21 @@ function resetAll(){
   }
 }
 
+// SWITCH
+function switchUser(user){
+  currentUser=user;
+
+  document.getElementById("dadBtn").classList.remove("active");
+  document.getElementById("momBtn").classList.remove("active");
+  document.getElementById(user+"Btn").classList.add("active");
+
+  document.getElementById("title").innerText=
+    user==="dad"?"Dad's Medicines":"Mom's Medicines";
+
+  updateMedicineLabels();
+  loadState();
+  loadCustom();
+}
 
 switchUser("dad");
 
