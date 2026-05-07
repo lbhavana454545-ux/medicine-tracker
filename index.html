@@ -636,41 +636,6 @@ function renderBP(data){
   });
 
 }
-
- /* function renderBP(data){
-
-  const table =
-    document.getElementById("bpTable");
-
-  table.innerHTML = `
-    <tr>
-      <th>Time</th>
-      <th>Systolic</th>
-      <th>Diastolic</th>
-    </tr>
-  `;
-
-  Object.entries(data).forEach(([key,m]) => {
-
-    const row = table.insertRow();
-
-    row.insertCell(0).innerText = m.time;
-    row.insertCell(1).innerText = m.systolic;
-    row.insertCell(2).innerText = m.diastolic;
-
-    /* DELETE */
-    row.oncontextmenu = (e) => {
-
-      e.preventDefault();
-
-      if(confirm("Delete this BP reading?")){
-
-        db.ref(currentUser+"/bp/"+key)
-          .remove();
-      }
-    };
-  });
-} */
 /* ---------- COPY TABLE ---------- */
 
 function copyTable(){
