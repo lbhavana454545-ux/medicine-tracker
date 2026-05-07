@@ -601,6 +601,61 @@ function renderBP(data){
     row.insertCell(1).innerText = m.systolic;
     row.insertCell(2).innerText = m.diastolic;
 
+    /* DELETE RECORD */
+    row.oncontextmenu = (e) => {
+
+      e.preventDefault();
+
+      if(confirm("Delete this BP reading?")){
+
+        db.ref(currentUser+"/bp/"+key)
+          .remove();
+      }
+    };
+
+    /* EDIT VALUES */
+    row.ondblclick = () => {
+
+      const newSystolic =
+        prompt("Edit systolic value:", m.systolic);
+
+      if(newSystolic === null) return;
+
+      const newDiastolic =
+        prompt("Edit diastolic value:", m.diastolic);
+
+      if(newDiastolic === null) return;
+
+      db.ref(currentUser+"/bp/"+key)
+        .update({
+          systolic:newSystolic,
+          diastolic:newDiastolic
+        });
+    };
+
+  });
+}
+ /* function renderBP(data){
+
+  const table =
+    document.getElementById("bpTable");
+
+  table.innerHTML = `
+    <tr>
+      <th>Time</th>
+      <th>Systolic</th>
+      <th>Diastolic</th>
+    </tr>
+  `;
+
+  Object.entries(data).forEach(([key,m]) => {
+
+    const row = table.insertRow();
+
+    row.insertCell(0).innerText = m.time;
+    row.insertCell(1).innerText = m.systolic;
+    row.insertCell(2).innerText = m.diastolic;
+
     /* DELETE */
     row.oncontextmenu = (e) => {
 
@@ -613,8 +668,7 @@ function renderBP(data){
       }
     };
   });
-}
-
+} */
 /* ---------- COPY TABLE ---------- */
 
 function copyTable(){
