@@ -601,32 +601,32 @@ function renderBP(data){
     row.insertCell(1).innerText = m.systolic;
     row.insertCell(2).innerText = m.diastolic;
 
-    /* DELETE RECORD */
+    /* DELETE */
     row.oncontextmenu = (e) => {
 
       e.preventDefault();
 
       if(confirm("Delete this BP reading?")){
 
-        db.ref(currentUser+"/bp/"+key)
+        db.ref(currentUser + "/bp/" + key)
           .remove();
       }
     };
 
-    /* EDIT VALUES */
+    /* EDIT */
     row.ondblclick = () => {
 
       const newSystolic =
-        prompt("Edit systolic value:", m.systolic);
+        prompt("Edit systolic:", m.systolic);
 
       if(newSystolic === null) return;
 
       const newDiastolic =
-        prompt("Edit diastolic value:", m.diastolic);
+        prompt("Edit diastolic:", m.diastolic);
 
       if(newDiastolic === null) return;
 
-      db.ref(currentUser+"/bp/"+key)
+      db.ref(currentUser + "/bp/" + key)
         .update({
           systolic:newSystolic,
           diastolic:newDiastolic
@@ -634,7 +634,7 @@ function renderBP(data){
     };
 
   });
-}
+
  /* function renderBP(data){
 
   const table =
