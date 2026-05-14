@@ -789,25 +789,34 @@ function renderCharts(data){
       options:{
         responsive:true,
         maintainAspectRatio:false,
+plugins:{
+  tooltip:{
+    displayColors:false,
 
-        plugins:{
-          tooltip:{
-            callbacks:{
-              label:function(context){
+    callbacks:{
 
-                const index = context.dataIndex;
+      title:function(context){
 
-                const systolic =
-                  dailySystolic[index];
+        const index = context[0].dataIndex;
 
-                const diastolic =
-                  dailyDiastolic[index];
+        return dailyLabels[index];
+      },
 
-                return `BP: ${systolic}/${diastolic}`;
-              }
-            }
-          }
-        }
+      label:function(context){
+
+        const index = context.dataIndex;
+
+        const systolic =
+          dailySystolic[index];
+
+        const diastolic =
+          dailyDiastolic[index];
+
+        return `${systolic}/${diastolic}`;
+      }
+    }
+  }
+}
       }
     }
   );
