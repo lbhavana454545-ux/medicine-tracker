@@ -2,8 +2,12 @@
 <html>
 <head>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -20,7 +24,8 @@ h1 {
   text-align:center;
 }
 
-/* TOP TABS */
+/* TABS */
+
 .tabs {
   display:flex;
   justify-content:center;
@@ -41,6 +46,7 @@ h1 {
 }
 
 /* USER TOGGLE */
+
 .toggle {
   text-align:center;
   margin-bottom:15px;
@@ -60,6 +66,7 @@ h1 {
 }
 
 /* MEDICINE BUTTONS */
+
 .btn {
   width:100%;
   padding:18px;
@@ -76,6 +83,7 @@ h1 {
 }
 
 /* RESET */
+
 .reset-btn {
   width:100%;
   padding:14px;
@@ -88,6 +96,7 @@ h1 {
 }
 
 /* FLOATING BUTTON */
+
 .fab {
   position:fixed;
   bottom:25px;
@@ -104,6 +113,7 @@ h1 {
 }
 
 /* FORMS */
+
 .form {
   display:none;
   position:fixed;
@@ -146,6 +156,7 @@ input, select {
 }
 
 /* TABLE */
+
 table {
   width:100%;
   border-collapse:collapse;
@@ -161,6 +172,20 @@ th, td {
 
 th {
   background:#f5f5f5;
+}
+
+/* CHARTS */
+
+.chart-container {
+  background:white;
+  padding:15px;
+  margin-top:20px;
+  border-radius:15px;
+}
+
+canvas {
+  width:100% !important;
+  height:300px !important;
 }
 
 </style>
@@ -186,27 +211,45 @@ const db = firebase.database();
 <h1>Health Tracker</h1>
 
 <!-- MAIN TABS -->
+
 <div class="tabs">
-  <button onclick="switchTab('med')" id="medTab">Medicines</button>
-  <button onclick="switchTab('bp')" id="bpTab">BP</button>
+  <button onclick="switchTab('med')" id="medTab">
+    Medicines
+  </button>
+
+  <button onclick="switchTab('bp')" id="bpTab">
+    BP
+  </button>
 </div>
 
 <!-- USER -->
+
 <div class="toggle">
-  <button onclick="switchUser('dad')" id="dadBtn">Dad</button>
-  <button onclick="switchUser('mom')" id="momBtn">Mom</button>
+
+  <button onclick="switchUser('dad')" id="dadBtn">
+    Dad
+  </button>
+
+  <button onclick="switchUser('mom')" id="momBtn">
+    Mom
+  </button>
+
 </div>
 
 <!-- MEDICINES -->
+
 <div id="medSection">
+
   <div id="container"></div>
 
   <button class="reset-btn" onclick="resetAll()">
     Reset All
   </button>
+
 </div>
 
-<!-- BP -->
+<!-- BP SECTION -->
+
 <div id="bpSection" style="display:none;">
 
   <button onclick="copyTable()" class="btn">
@@ -214,21 +257,45 @@ const db = firebase.database();
   </button>
 
   <table id="bpTable">
+
     <tr>
       <th>Time</th>
       <th>Systolic</th>
       <th>Diastolic</th>
     </tr>
+
   </table>
+
+  <!-- DAILY GRAPH -->
+
+  <div class="chart-container">
+
+    <h2>Today's BP Trend</h2>
+
+    <canvas id="dailyChart"></canvas>
+
+  </div>
+
+  <!-- WEEKLY GRAPH -->
+
+  <div class="chart-container">
+
+    <h2>Weekly BP Trend</h2>
+
+    <canvas id="weeklyChart"></canvas>
+
+  </div>
 
 </div>
 
 <!-- FLOATING BUTTON -->
+
 <button class="fab" id="fabButton" onclick="handleFabClick()">
   +
 </button>
 
 <!-- MEDICINE FORM -->
+
 <div id="medForm" class="form">
 
   <input id="medName" placeholder="Medicine name">
@@ -255,6 +322,7 @@ const db = firebase.database();
 </div>
 
 <!-- BP FORM -->
+
 <div id="bpForm" class="form">
 
   <input id="systolic" placeholder="Systolic (upper)">
@@ -274,6 +342,9 @@ const db = firebase.database();
 
 let currentUser = "dad";
 let currentTab = "med";
+
+let dailyChart;
+let weeklyChart;
 
 /* ---------- TAB SWITCH ---------- */
 
@@ -334,7 +405,7 @@ function updateFab(symbol){
   document.getElementById("fabButton").innerText = symbol;
 }
 
-/* ---------- FORM CONTROLS ---------- */
+/* ---------- FORMS ---------- */
 
 function closeAllForms(){
 
@@ -349,11 +420,16 @@ function toggleMedicineForm(){
   const form = document.getElementById("medForm");
 
   if(form.style.display === "block"){
+
     form.style.display = "none";
     updateFab("+");
+
   } else {
+
     closeAllForms();
+
     form.style.display = "block";
+
     updateFab("×");
   }
 }
@@ -363,11 +439,16 @@ function toggleBPForm(){
   const form = document.getElementById("bpForm");
 
   if(form.style.display === "block"){
+
     form.style.display = "none";
     updateFab("+");
+
   } else {
+
     closeAllForms();
+
     form.style.display = "block";
+
     updateFab("×");
   }
 }
@@ -475,6 +556,7 @@ function render(data){
         }
 
         /* TOGGLE */
+
         btn.onclick = () => {
 
           db.ref(currentUser+"/medicines/"+m.key)
@@ -482,6 +564,7 @@ function render(data){
         };
 
         /* DELETE */
+
         btn.oncontextmenu = (e) => {
 
           e.preventDefault();
@@ -494,6 +577,7 @@ function render(data){
         };
 
         /* EDIT */
+
         btn.ondblclick = () => {
 
           const newName =
@@ -555,7 +639,6 @@ function saveBP(){
     timestamp:Date.now()
   });
 
-  /* CLEAR */
   document.getElementById("systolic").value = "";
   document.getElementById("diastolic").value = "";
 
@@ -566,7 +649,7 @@ function saveBP(){
 
 function loadBP(){
 
-  const ref = db.ref(currentUser+"/bp");
+  const ref = db.ref(currentUser + "/bp");
 
   ref.off();
 
@@ -575,6 +658,8 @@ function loadBP(){
     const data = snap.val() || {};
 
     renderBP(data);
+    renderCharts(data);
+
   });
 }
 
@@ -602,6 +687,7 @@ function renderBP(data){
     row.insertCell(2).innerText = m.diastolic;
 
     /* DELETE */
+
     row.oncontextmenu = (e) => {
 
       e.preventDefault();
@@ -614,6 +700,7 @@ function renderBP(data){
     };
 
     /* EDIT */
+
     row.ondblclick = () => {
 
       const newSystolic =
@@ -636,6 +723,152 @@ function renderBP(data){
   });
 
 }
+
+/* ---------- RENDER CHARTS ---------- */
+
+function renderCharts(data){
+
+  const entries = Object.values(data)
+    .sort((a,b)=>a.timestamp-b.timestamp);
+
+  const today = new Date();
+
+  const todayEntries = entries.filter(e=>{
+
+    const d = new Date(e.timestamp);
+
+    return (
+      d.getDate() === today.getDate() &&
+      d.getMonth() === today.getMonth() &&
+      d.getFullYear() === today.getFullYear()
+    );
+  });
+
+  /* DAILY */
+
+  const dailyLabels = todayEntries.map(e=>{
+
+    return new Date(e.timestamp)
+      .toLocaleTimeString([], {
+        hour:'2-digit',
+        minute:'2-digit'
+      });
+  });
+
+  const dailySystolic =
+    todayEntries.map(e=>Number(e.systolic));
+
+  const dailyDiastolic =
+    todayEntries.map(e=>Number(e.diastolic));
+
+  if(dailyChart){
+    dailyChart.destroy();
+  }
+
+  dailyChart = new Chart(
+    document.getElementById('dailyChart'),
+    {
+      type:'line',
+      data:{
+        labels:dailyLabels,
+        datasets:[
+          {
+            label:'Systolic',
+            data:dailySystolic,
+            borderWidth:3,
+            tension:0.3
+          },
+          {
+            label:'Diastolic',
+            data:dailyDiastolic,
+            borderWidth:3,
+            tension:0.3
+          }
+        ]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false
+      }
+    }
+  );
+
+  /* WEEKLY */
+
+  const weekMap = {};
+
+  entries.forEach(e=>{
+
+    const d = new Date(e.timestamp);
+
+    const key =
+      `${d.getDate()}/${d.getMonth()+1}`;
+
+    if(!weekMap[key]){
+
+      weekMap[key] = {
+        sys:[],
+        dia:[]
+      };
+    }
+
+    weekMap[key].sys.push(Number(e.systolic));
+    weekMap[key].dia.push(Number(e.diastolic));
+  });
+
+  const weekLabels = Object.keys(weekMap);
+
+  const weeklySystolic =
+    weekLabels.map(k=>{
+
+      const arr = weekMap[k].sys;
+
+      return Math.round(
+        arr.reduce((a,b)=>a+b,0)/arr.length
+      );
+    });
+
+  const weeklyDiastolic =
+    weekLabels.map(k=>{
+
+      const arr = weekMap[k].dia;
+
+      return Math.round(
+        arr.reduce((a,b)=>a+b,0)/arr.length
+      );
+    });
+
+  if(weeklyChart){
+    weeklyChart.destroy();
+  }
+
+  weeklyChart = new Chart(
+    document.getElementById('weeklyChart'),
+    {
+      type:'bar',
+      data:{
+        labels:weekLabels,
+        datasets:[
+          {
+            label:'Avg Systolic',
+            data:weeklySystolic,
+            borderWidth:2
+          },
+          {
+            label:'Avg Diastolic',
+            data:weeklyDiastolic,
+            borderWidth:2
+          }
+        ]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false
+      }
+    }
+  );
+}
+
 /* ---------- COPY TABLE ---------- */
 
 function copyTable(){
