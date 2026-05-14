@@ -13,26 +13,26 @@
 
 <style>
 
-body {
-  font-family: Arial;
+body{
+  font-family:Arial;
   background:#f2f2f2;
-  padding:10px;
   margin:0;
+  padding:10px;
 }
 
-h1 {
+h1{
   text-align:center;
 }
 
 /* TABS */
 
-.tabs {
+.tabs{
   display:flex;
   justify-content:center;
   margin-bottom:15px;
 }
 
-.tabs button {
+.tabs button{
   padding:10px 20px;
   margin:5px;
   border:none;
@@ -40,19 +40,19 @@ h1 {
   background:#ccc;
 }
 
-.activeTab {
+.activeTab{
   background:#2ecc71 !important;
   color:white;
 }
 
 /* USER TOGGLE */
 
-.toggle {
+.toggle{
   text-align:center;
   margin-bottom:15px;
 }
 
-.toggle button {
+.toggle button{
   padding:10px;
   margin:5px;
   border:none;
@@ -60,14 +60,14 @@ h1 {
   background:#ccc;
 }
 
-.active {
+.active{
   background:#2ecc71 !important;
   color:white;
 }
 
-/* MEDICINE BUTTONS */
+/* BUTTONS */
 
-.btn {
+.btn{
   width:100%;
   padding:18px;
   margin:8px 0;
@@ -78,13 +78,13 @@ h1 {
   font-size:16px;
 }
 
-.taken {
+.taken{
   background:#2ecc71;
 }
 
 /* RESET */
 
-.reset-btn {
+.reset-btn{
   width:100%;
   padding:14px;
   margin-top:25px;
@@ -97,7 +97,7 @@ h1 {
 
 /* FLOATING BUTTON */
 
-.fab {
+.fab{
   position:fixed;
   bottom:25px;
   right:25px;
@@ -114,7 +114,7 @@ h1 {
 
 /* FORMS */
 
-.form {
+.form{
   display:none;
   position:fixed;
   bottom:0;
@@ -128,7 +128,7 @@ h1 {
   z-index:998;
 }
 
-input, select {
+input, select{
   width:100%;
   padding:12px;
   margin-bottom:10px;
@@ -137,7 +137,7 @@ input, select {
   box-sizing:border-box;
 }
 
-.form-btn {
+.form-btn{
   width:100%;
   padding:14px;
   border:none;
@@ -146,46 +146,46 @@ input, select {
   font-size:15px;
 }
 
-.save-btn {
+.save-btn{
   background:#2ecc71;
   color:white;
 }
 
-.cancel-btn {
+.cancel-btn{
   background:#ccc;
 }
 
 /* TABLE */
 
-table {
+table{
   width:100%;
   border-collapse:collapse;
   background:white;
   margin-top:15px;
 }
 
-th, td {
+th, td{
   border:1px solid #ddd;
   padding:10px;
   text-align:center;
 }
 
-th {
+th{
   background:#f5f5f5;
 }
 
 /* CHARTS */
 
-.chart-container {
+.chart-container{
   background:white;
   padding:15px;
   margin-top:20px;
   border-radius:15px;
 }
 
-canvas {
+canvas{
   width:100% !important;
-  height:300px !important;
+  height:320px !important;
 }
 
 </style>
@@ -200,6 +200,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.database();
 
 </script>
@@ -765,7 +766,7 @@ function renderCharts(data){
     dailyChart.destroy();
   }
 
-  /* DAILY LINE GRAPH */
+  /* DAILY GRAPH */
 
   dailyChart = new Chart(
     document.getElementById('dailyChart'),
@@ -781,47 +782,76 @@ function renderCharts(data){
             data:dailySystolic,
             borderWidth:4,
             tension:0.3,
-            pointRadius:6
+            pointRadius:6,
+            pointHoverRadius:10,
+            fill:false
           }
         ]
       },
 
       options:{
+
         responsive:true,
         maintainAspectRatio:false,
-plugins:{
-  tooltip:{
-    displayColors:false,
 
-    callbacks:{
+        interaction:{
+          mode:'nearest',
+          intersect:true
+        },
 
-      title:function(context){
+        plugins:{
 
-        const index = context[0].dataIndex;
+          legend:{
+            display:false
+          },
 
-        return dailyLabels[index];
-      },
+          tooltip:{
 
-      label:function(context){
+            enabled:true,
+            displayColors:false,
 
-        const index = context.dataIndex;
+            backgroundColor:'#222',
+            titleColor:'#fff',
+            bodyColor:'#fff',
+            padding:12,
 
-        const systolic =
-          dailySystolic[index];
+            callbacks:{
 
-        const diastolic =
-          dailyDiastolic[index];
+              title:function(context){
 
-        return `${systolic}/${diastolic}`;
-      }
-    }
-  }
-}
+                const index =
+                  context[0].dataIndex;
+
+                return dailyLabels[index];
+              },
+
+              label:function(context){
+
+                const index =
+                  context.dataIndex;
+
+                const systolic =
+                  dailySystolic[index];
+
+                const diastolic =
+                  dailyDiastolic[index];
+
+                return `${systolic}/${diastolic}`;
+              }
+            }
+          }
+        },
+
+        scales:{
+          y:{
+            beginAtZero:false
+          }
+        }
       }
     }
   );
 
-  /* WEEKLY */
+  /* WEEKLY GRAPH */
 
   const weekMap = {};
 
@@ -835,13 +865,11 @@ plugins:{
     if(!weekMap[key]){
 
       weekMap[key] = {
-        sys:[],
-        dia:[]
+        sys:[]
       };
     }
 
     weekMap[key].sys.push(Number(e.systolic));
-    weekMap[key].dia.push(Number(e.diastolic));
   });
 
   const weekLabels = Object.keys(weekMap);
@@ -860,8 +888,6 @@ plugins:{
     weeklyChart.destroy();
   }
 
-  /* WEEKLY LINE GRAPH */
-
   weeklyChart = new Chart(
     document.getElementById('weeklyChart'),
     {
@@ -876,7 +902,8 @@ plugins:{
             data:weeklySystolic,
             borderWidth:4,
             tension:0.3,
-            pointRadius:6
+            pointRadius:6,
+            fill:false
           }
         ]
       },
