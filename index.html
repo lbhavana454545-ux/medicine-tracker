@@ -213,6 +213,7 @@ const db = firebase.database();
 <!-- MAIN TABS -->
 
 <div class="tabs">
+
   <button onclick="switchTab('med')" id="medTab">
     Medicines
   </button>
@@ -220,6 +221,7 @@ const db = firebase.database();
   <button onclick="switchTab('bp')" id="bpTab">
     BP
   </button>
+
 </div>
 
 <!-- USER -->
@@ -744,8 +746,6 @@ function renderCharts(data){
     );
   });
 
-  /* DAILY */
-
   const dailyLabels = todayEntries.map(e=>{
 
     return new Date(e.timestamp)
@@ -765,30 +765,49 @@ function renderCharts(data){
     dailyChart.destroy();
   }
 
+  /* DAILY LINE GRAPH */
+
   dailyChart = new Chart(
     document.getElementById('dailyChart'),
     {
       type:'line',
+
       data:{
         labels:dailyLabels,
+
         datasets:[
           {
             label:'Systolic',
             data:dailySystolic,
-            borderWidth:3,
-            tension:0.3
-          },
-          {
-            label:'Diastolic',
-            data:dailyDiastolic,
-            borderWidth:3,
-            tension:0.3
+            borderWidth:4,
+            tension:0.3,
+            pointRadius:6
           }
         ]
       },
+
       options:{
         responsive:true,
-        maintainAspectRatio:false
+        maintainAspectRatio:false,
+
+        plugins:{
+          tooltip:{
+            callbacks:{
+              label:function(context){
+
+                const index = context.dataIndex;
+
+                const systolic =
+                  dailySystolic[index];
+
+                const diastolic =
+                  dailyDiastolic[index];
+
+                return `BP: ${systolic}/${diastolic}`;
+              }
+            }
+          }
+        }
       }
     }
   );
@@ -828,39 +847,31 @@ function renderCharts(data){
       );
     });
 
-  const weeklyDiastolic =
-    weekLabels.map(k=>{
-
-      const arr = weekMap[k].dia;
-
-      return Math.round(
-        arr.reduce((a,b)=>a+b,0)/arr.length
-      );
-    });
-
   if(weeklyChart){
     weeklyChart.destroy();
   }
 
+  /* WEEKLY LINE GRAPH */
+
   weeklyChart = new Chart(
     document.getElementById('weeklyChart'),
     {
-      type:'bar',
+      type:'line',
+
       data:{
         labels:weekLabels,
+
         datasets:[
           {
-            label:'Avg Systolic',
+            label:'Average Systolic',
             data:weeklySystolic,
-            borderWidth:2
-          },
-          {
-            label:'Avg Diastolic',
-            data:weeklyDiastolic,
-            borderWidth:2
+            borderWidth:4,
+            tension:0.3,
+            pointRadius:6
           }
         ]
       },
+
       options:{
         responsive:true,
         maintainAspectRatio:false
