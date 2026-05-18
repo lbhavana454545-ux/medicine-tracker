@@ -776,17 +776,22 @@ function renderCharts(data){
       data:{
         labels:dailyLabels,
 
-        datasets:[
-          {
-            label:'Systolic',
-            data:dailySystolic,
-            borderWidth:4,
-            tension:0.3,
-            pointRadius:6,
-            pointHoverRadius:10,
-            fill:false
-          }
-        ]
+       datasets:[ {
+    label:'Systolic',
+    data: todayEntries.map(e => ({
+      x: e.time,
+      y: e.systolic,
+      diastolic: e.diastolic
+    })),
+
+    borderWidth:4,
+    tension:0.3,
+    pointRadius:7,
+    pointHoverRadius:12,
+    hitRadius:25,
+    fill:false
+  }
+]
       },
 
       options:{
@@ -818,24 +823,18 @@ function renderCharts(data){
             callbacks:{
 
               title:function(context){
-
-                const index =
-                  context[0].dataIndex;
-
-                return dailyLabels[index];
+            
+                return context[0].raw.x;
               },
-
+            
               label:function(context){
-
-                const index =
-                  context.dataIndex;
-
+            
                 const systolic =
-                  dailySystolic[index];
-
+                  context.raw.y;
+            
                 const diastolic =
-                  dailyDiastolic[index];
-
+                  context.raw.diastolic;
+            
                 return `${systolic}/${diastolic}`;
               }
             }
@@ -901,7 +900,7 @@ function renderCharts(data){
             label:'Average Systolic',
             data:weeklySystolic,
             borderWidth:4,
-            tension:0.3,
+            tension:0.15,
             pointRadius:6,
             fill:false
           }
