@@ -38,6 +38,7 @@ h1{
   border:none;
   border-radius:8px;
   background:#ccc;
+  font-size:15px;
 }
 
 .activeTab{
@@ -58,6 +59,7 @@ h1{
   border:none;
   border-radius:8px;
   background:#ccc;
+  font-size:15px;
 }
 
 .active{
@@ -135,6 +137,7 @@ input, select{
   border-radius:10px;
   border:1px solid #ccc;
   box-sizing:border-box;
+  font-size:15px;
 }
 
 .form-btn{
@@ -636,10 +639,12 @@ function saveBP(){
   }
 
   db.ref(currentUser+"/bp").push({
-    systolic:s,
-    diastolic:d,
-    time:new Date().toLocaleString(),
+
+    systolic:Number(s),
+    diastolic:Number(d),
+
     timestamp:Date.now()
+
   });
 
   document.getElementById("systolic").value = "";
@@ -685,7 +690,11 @@ function renderBP(data){
 
     const row = table.insertRow();
 
-    row.insertCell(0).innerText = m.time;
+    const readableTime =
+      new Date(m.timestamp)
+        .toLocaleString();
+
+    row.insertCell(0).innerText = readableTime;
     row.insertCell(1).innerText = m.systolic;
     row.insertCell(2).innerText = m.diastolic;
 
@@ -718,8 +727,8 @@ function renderBP(data){
 
       db.ref(currentUser + "/bp/" + key)
         .update({
-          systolic:newSystolic,
-          diastolic:newDiastolic
+          systolic:Number(newSystolic),
+          diastolic:Number(newDiastolic)
         });
     };
 
@@ -731,8 +740,31 @@ function renderBP(data){
 
 function renderCharts(data){
 
-  const entries = Object.values(data)
-    .sort((a,b)=>a.timestamp-b.timestamp);
+  const entries = [];
+
+  Object.entries(data).forEach(([key,value],index)=>{
+
+    if(
+      value &&
+      value.systolic &&
+      value.diastolic
+    ){
+
+      entries.push({
+
+        systolic:Number(value.systolic),
+        diastolic:Number(value.diastolic),
+
+        timestamp:
+          value.timestamp ||
+          (Date.now()+index)
+
+      });
+    }
+
+  });
+
+  entries.sort((a,b)=>a.timestamp-b.timestamp);
 
   const today = new Date();
 
@@ -747,21 +779,6 @@ function renderCharts(data){
     );
   });
 
-  const dailyLabels = todayEntries.map(e=>{
-
-    return new Date(e.timestamp)
-      .toLocaleTimeString([], {
-        hour:'2-digit',
-        minute:'2-digit'
-      });
-  });
-
-  const dailySystolic =
-    todayEntries.map(e=>Number(e.systolic));
-
-  const dailyDiastolic =
-    todayEntries.map(e=>Number(e.diastolic));
-
   if(dailyChart){
     dailyChart.destroy();
   }
@@ -774,24 +791,35 @@ function renderCharts(data){
       type:'line',
 
       data:{
-        labels:dailyLabels,
 
-       datasets:[ {
-    label:'Systolic',
-    data: todayEntries.map(e => ({
-      x: e.time,
-      y: e.systolic,
-      diastolic: e.diastolic
-    })),
+        datasets:[
+          {
+            label:'Systolic',
 
-    borderWidth:4,
-    tension:0.3,
-    pointRadius:7,
-    pointHoverRadius:12,
-    hitRadius:25,
-    fill:false
-  }
-]
+            data: todayEntries.map(e => ({
+
+              x: new Date(e.timestamp)
+                .toLocaleTimeString([],{
+                  hour:'2-digit',
+                  minute:'2-digit'
+                }),
+
+              y: e.systolic,
+
+              diastolic:e.diastolic
+
+            })),
+
+            borderWidth:4,
+            tension:0.15,
+
+            pointRadius:7,
+            pointHoverRadius:12,
+            hitRadius:25,
+
+            fill:false
+          }
+        ]
       },
 
       options:{
@@ -801,7 +829,8 @@ function renderCharts(data){
 
         interaction:{
           mode:'nearest',
-          intersect:true
+          intersect:false,
+          axis:'x'
         },
 
         plugins:{
@@ -823,18 +852,18 @@ function renderCharts(data){
             callbacks:{
 
               title:function(context){
-            
+
                 return context[0].raw.x;
               },
-            
+
               label:function(context){
-            
+
                 const systolic =
                   context.raw.y;
-            
+
                 const diastolic =
                   context.raw.diastolic;
-            
+
                 return `${systolic}/${diastolic}`;
               }
             }
@@ -842,6 +871,11 @@ function renderCharts(data){
         },
 
         scales:{
+
+          x:{
+            type:'category'
+          },
+
           y:{
             beginAtZero:false
           }
