@@ -257,10 +257,60 @@ const db = firebase.database();
 <!-- BP SECTION -->
 
 <div id="bpSection" style="display:none;">
+  <div id="latestBP" style="
+  background:white;
+  padding:15px;
+  border-radius:15px;
+  margin-bottom:15px;
+  text-align:center;
+">
+</div>
 
-  <button onclick="copyTable()" class="btn">
+  <div style="display:flex; gap:10px; margin-bottom:15px;">
+
+  <button onclick="copyTable()" class="btn" style="margin:0;">
     Copy Table
   </button>
+
+  <button onclick="deleteAllBP()" class="reset-btn" style="margin:0;">
+    Delete All
+  </button>
+
+</div>
+ 
+  <!-- DAILY GRAPH -->
+
+  <div class="chart-container">
+
+    <h2>Today's BP Trend</h2>
+
+    <canvas id="dailyChart"></canvas>
+
+  </div>
+  
+
+
+  <!-- WEEKLY GRAPH -->
+
+  <div class="chart-container">
+
+    <h2>Weekly BP Trend</h2>
+
+    <canvas id="weeklyChart"></canvas>
+
+  </div>
+<details style="margin-top:20px;">
+
+  <summary style="
+    background:white;
+    padding:12px;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+  ">
+    BP History
+  </summary>
 
   <table id="bpTable">
 
@@ -272,27 +322,9 @@ const db = firebase.database();
 
   </table>
 
-  <!-- DAILY GRAPH -->
-
-  <div class="chart-container">
-
-    <h2>Today's BP Trend</h2>
-
-    <canvas id="dailyChart"></canvas>
-
-  </div>
-
-  <!-- WEEKLY GRAPH -->
-
-  <div class="chart-container">
-
-    <h2>Weekly BP Trend</h2>
-
-    <canvas id="weeklyChart"></canvas>
-
-  </div>
-
+</details>
 </div>
+  
 
 <!-- FLOATING BUTTON -->
 
@@ -674,7 +706,18 @@ function loadBP(){
 /* ---------- RENDER BP ---------- */
 
 function renderBP(data){
+  
+  if(Object.keys(data).length === 0){
 
+  document.getElementById("latestBP")
+    .innerHTML = `
+      <div style="padding:20px;">
+        No BP readings available
+      </div>
+    `;
+
+  return;
+}
   const table =
     document.getElementById("bpTable");
 
@@ -686,13 +729,64 @@ function renderBP(data){
     </tr>
   `;
 
-  Object.entries(data).forEach(([key,m]) => {
+ const readings =
+  Object.entries(data)
+    .sort(
+      (a,b) =>
+      (b[1].timestamp || 0) -
+      (a[1].timestamp || 0)
+    );
 
+if(readings.length){
+
+  const latest = readings[0][1];
+
+  document.getElementById("latestBP")
+    .innerHTML = `
+      <div style="font-size:18px;">
+        Latest Reading
+      </div>
+
+      <div style="
+        font-size:38px;
+        font-weight:bold;
+        margin-top:10px;
+      ">
+        ${latest.systolic}/${latest.diastolic}
+      </div>
+
+      <div style="
+        margin-top:10px;
+        color:#666;
+      ">
+        ${new Date(
+          latest.timestamp
+        )
+          .toLocaleTimeString([],{
+        hour:'2-digit',
+        minute:'2-digit',
+        hour12:true
+          })}
+      </div>
+          <div style="
+        margin-top:10px;
+        font-size:14px;
+        color:#888;
+      ">
+        Total Readings: ${readings.length}
+      </div>
+    `;
+}
+
+readings.forEach(([key,m]) => {
+  
     const row = table.insertRow();
 
     const readableTime =
-      new Date(m.timestamp)
-        .toLocaleString();
+    new Date(m.timestamp)
+    .toLocaleString([],{
+      hour12:true
+    });
 
     row.insertCell(0).innerText = readableTime;
     row.insertCell(1).innerText = m.systolic;
@@ -801,7 +895,8 @@ function renderCharts(data){
               x: new Date(e.timestamp)
                 .toLocaleTimeString([],{
                   hour:'2-digit',
-                  minute:'2-digit'
+                  minute:'2-digit',
+                  hour12:true
                 }),
 
               y: e.systolic,
@@ -893,7 +988,7 @@ function renderCharts(data){
     const d = new Date(e.timestamp);
 
     const key =
-      `${d.getDate()}/${d.getMonth()+1}`;
+  `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 
     if(!weekMap[key]){
 
@@ -972,6 +1067,17 @@ function copyTable(){
   navigator.clipboard.writeText(text);
 
   alert("Copied!");
+}
+  function deleteAllBP(){
+
+  if(
+    confirm(
+      "Delete ALL BP readings? This cannot be undone."
+    )
+  ){
+
+    db.ref(currentUser + "/bp").remove();
+  }
 }
 
 /* ---------- INIT ---------- */
